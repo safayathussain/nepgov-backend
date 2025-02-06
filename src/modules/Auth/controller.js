@@ -32,6 +32,23 @@ const signIn = async (req, res) => {
     const result = await authService.signIn(
       req.body.email,
       req.body.password,
+      res,
+      req
+    );
+    sendResponse(res, { message: result.message, data: result.data });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: error.message,
+    });
+  }
+};
+const adminSignIn = async (req, res) => {
+  try {
+    const result = await authService.adminSignIn(
+      req.body.email,
+      req.body.password,
       res
     );
     sendResponse(res, { message: result.message, data: result.data });
@@ -77,7 +94,8 @@ const verifyOtp = async (req, res) => {
     const result = await authService.verifyOtp(
       req.body.email,
       req.body.otp,
-      res
+      res,
+      req
     );
     sendResponse(res, {
       message: result.message,
@@ -119,7 +137,8 @@ const resetPassword = async (req, res) => {
       req.body.email,
       req.body.newPassword,
       req.body.otp,
-      res
+      res,
+      req
     );
     sendResponse(res, { message: result.message, data: result.data });
   } catch (error) {
@@ -227,4 +246,5 @@ module.exports = {
   signIn,
   verifyOtpForPass,
   changePassword,
+  adminSignIn
 };

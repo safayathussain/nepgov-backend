@@ -3,14 +3,16 @@ const { generateAccessToken } = require("../utils/function");
 
 const authMiddleware = async (req, res, next) => {
   try {
-    let token = req.cookies.accessToken || req.headers["authorization"];
+    let token = req.cookies.accessToken || req.headers["authorization"]?.split(" ")[1] ;
+    console.log(token)
     const refreshToken = req.cookies.refreshToken;
-
+    const cookieConsent = req.headers["x-user-consent"];
     if (!token && !refreshToken) {
       return res.status(401).json({ message: "Unauthorized" });
     }
+
     // Handle refresh token scenario
-    if (!token && refreshToken) {
+    if (!token && refreshToken && cookieConsent === "accepted") {
       try {
         const decodedRefresh = jwt.verify(
           refreshToken,
@@ -38,12 +40,13 @@ const authMiddleware = async (req, res, next) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
       req.user = decoded.id;
+      req.cookieConsent = cookieConsent
       return next();
     } catch (error) {
       return res.status(401).json({ message: "Invalid Access Token" });
     }
   } catch (error) {
-    return res.status(401).json({ message: "Authentication Error" });
+    return res.status(401).json({ message: error?.message || "Authentication Error" });
   }
 };
 

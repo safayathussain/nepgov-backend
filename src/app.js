@@ -6,6 +6,7 @@ const connectDB = require("./config/db");
 const router = require("./routes");
 const connectRedis = require("./config/redis");
 const path = require("path");
+const checkCookieConsent = require("./middlewares/checkCookieConsent");
 dotenv.config();
 
 
@@ -44,7 +45,7 @@ const corsOptions = {
       }
     }
   },
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  allowedHeaders: ["Content-Type", "authorization", "X-Requested-With", "x-user-consent"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 };
 
@@ -52,7 +53,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 
-app.use("/api/v1", router);
+app.use("/api/v1", checkCookieConsent, router);
 
 app.use("*", (req, res) => {
   res.status(404).json({ status: "fail", data: "Route Not Found" });

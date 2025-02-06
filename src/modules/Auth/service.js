@@ -27,7 +27,9 @@ const registerUser = async (userData, role = "user", res) => {
 
   return { data: newUser };
 };
-const signIn = async (email, password, res) => {
+const signIn = async (email, password, res, req) => {
+  console.log(req.cookieConsent)
+
   const user = await User.findOne({ email }).select("+password");
   if (!user) throw new Error("User not found");
   const isMatch = await bcrypt.compare(password, user.password);
@@ -35,22 +37,56 @@ const signIn = async (email, password, res) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
   if (user.isVerified) {
-    // Set cookies for access & refresh tokens
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      // maxAge: 60 * 60 * 1000, // 1 hour
-      maxAge: 1000, // 1 hour
-    });
+    if (req.cookieConsent === "accepted") {
+      // Set cookies for access & refresh tokens
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge: 60 * 60 * 1000, // 1 hour
+      });
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+    }
   }
+  return {
+    message: "Sign-in successful",
+    data: {
+      user: {
+        ...user.toObject(),
+        ...(user.isVerified && req.cookieConsent !== "accepted"
+          ? { accessToken }
+          : {}),
+      },
+    },
+  };
+};
+const adminSignIn = async (email, password, res) => {
+  const user = await User.findOne({ email, role: "admin" }).select("+password");
+  if (!user) throw new Error("User not found");
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) throw new Error("Invalid credentials");
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+  // Set cookies for access & refresh tokens
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+    maxAge: 60 * 60 * 1000, // 1 hour
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
   return {
     message: "Sign-in successful",
     data: {
@@ -72,7 +108,7 @@ const sendOtp = async (email) => {
   return { message: "OTP sent successfully" };
 };
 
-const verifyOtp = async (email, otp, res) => {
+const verifyOtp = async (email, otp, res, req) => {
   const user = await User.findOne({ email });
   if (!user) throw new Error("Invalid OTP");
   const storedOTP = await redisClient.get(`otp:${email}`);
@@ -82,18 +118,20 @@ const verifyOtp = async (email, otp, res) => {
   await user.save();
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
-  res.cookie("refreshToken", accessToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-    maxAge: 60 * 60 * 1000, //1h
-  });
+  if (req.cookieConsent === "accepted") {
+    res.cookie("refreshToken", accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 60 * 60 * 1000, //1h
+    });
+  }
   return { message: "OTP verified successfully", data: { user, accessToken } };
 };
 const verifyOtpForPass = async (email, otp, res) => {
@@ -107,7 +145,7 @@ const verifyOtpForPass = async (email, otp, res) => {
   return { message: "OTP verified successfully", data: { success: true } };
 };
 
-const resetPassword = async (email, newPassword, otp, res) => {
+const resetPassword = async (email, newPassword, otp, res, req) => {
   const user = await User.findOne({ email });
   if (!user) throw new Error("User not found");
   const storedOTP = await redisClient.get(`otp:${email}`);
@@ -119,25 +157,27 @@ const resetPassword = async (email, newPassword, otp, res) => {
   await user.save();
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
-  res.cookie("refreshToken", accessToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-    maxAge: 60 * 60 * 1000, //1h
-  });
+  if (req.cookieConsent === "accepted") {
+    res.cookie("refreshToken", accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: 60 * 60 * 1000, //1h
+    });
+  }
   return {
     message: "Password reset successfully",
     data: { user, accessToken },
   };
 };
 const changePassword = async (userId, oldPassword, newPassword) => {
-  const user = await User.findById(userId).select('+password');
+  const user = await User.findById(userId).select("+password");
   if (!user) throw new Error("User not found");
   const isMatch = await bcrypt.compare(oldPassword, user.password);
   if (!isMatch) throw new Error("Old password is incorrect");
@@ -151,7 +191,6 @@ const changePassword = async (userId, oldPassword, newPassword) => {
     data: { user },
   };
 };
- 
 
 const updateProfile = async (userId, updateData) => {
   const user = await User.findByIdAndUpdate(userId, updateData, {
@@ -171,4 +210,5 @@ module.exports = {
   updateProfile,
   verifyOtpForPass,
   changePassword,
+  adminSignIn,
 };

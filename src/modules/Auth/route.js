@@ -10,7 +10,8 @@ const {
   updateProfile,
   signIn,
   verifyOtpForPass,
-  changePassword
+  changePassword,
+  adminSignIn
 } = require("./controller");
 const { registerValidation } = require("./validation");
 const authMiddleware = require("../../middlewares/authMiddleware");
@@ -19,7 +20,8 @@ const upload = require("../../utils/upload");
 const router = express.Router();
 
 router.post("/register", registerValidation, register);
-router.post("/signin", registerValidation, signIn);
+router.post("/signin", signIn);
+router.post("/admin-signin", adminSignIn);
 router.post("/admin-register", adminRegister);
 router.post("/send-otp", sendOtp);
 router.post("/verify-otp", verifyOtp);
