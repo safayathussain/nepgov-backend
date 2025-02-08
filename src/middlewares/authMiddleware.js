@@ -39,7 +39,9 @@ const authMiddleware = async (req, res, next) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
       req.user = decoded.id;
-      req.cookieConsent = cookieConsent
+      req.cookieConsent = cookieConsent;
+      req.role = decoded.role;
+      console.log(decoded)
       return next();
     } catch (error) {
       return res.status(401).json({ message: "Invalid Access Token" });

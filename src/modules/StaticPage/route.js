@@ -3,38 +3,40 @@ const router = require("express").Router();
 const authMiddleware = require("../../middlewares/authMiddleware");
 const roleMiddleware = require("../../middlewares/roleMiddleware");
 const {
-  createCategory,
-  getAllCategories,
-  getCategoryById,
-  updateCategory,
-  deleteCategory,
+  createStaticPage,
+  getAllStaticPages,
+  getStaticPageById,
+  getStaticPageByType,
+  updateStaticPage,
+  deleteStaticPage,
 } = require("./controller");
 const {
-  createCategoryValidation,
-  updateCategoryValidation,
+  createStaticPageValidation,
+  updateStaticPageValidation,
 } = require("./validation");
 
 router.post(
   "/create",
   authMiddleware,
   roleMiddleware(["admin"]),
-  createCategoryValidation,
-  createCategory
+  createStaticPageValidation,
+  createStaticPage
 );
-router.get("/", getAllCategories);
+router.get("/", getAllStaticPages);
+router.get("/page/:page", getStaticPageByType);
 router.put(
   "/update/:id",
   authMiddleware,
   roleMiddleware(["admin"]),
-  updateCategoryValidation,
-  updateCategory
+  updateStaticPageValidation,
+  updateStaticPage
 );
 router.delete(
   "/delete/:id",
   authMiddleware,
   roleMiddleware(["admin"]),
-  deleteCategory
+  deleteStaticPage
 );
-router.get("/:id", getCategoryById);
+router.get("/:id", getStaticPageById);
 
 module.exports = router;
