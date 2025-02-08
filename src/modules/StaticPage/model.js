@@ -1,4 +1,3 @@
-// models/staticPage.js
 const mongoose = require("mongoose");
 
 const staticPageSchema = new mongoose.Schema({

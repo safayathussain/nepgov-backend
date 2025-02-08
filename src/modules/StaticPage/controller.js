@@ -1,4 +1,3 @@
-// controllers/staticPageController.js
 const { validationResult } = require("express-validator");
 const staticPageService = require("./service");
 const { sendResponse } = require("../../utils/response");

@@ -1,4 +1,3 @@
-// router.js
 const router = require("express").Router();
 const authMiddleware = require("../../middlewares/authMiddleware");
 const roleMiddleware = require("../../middlewares/roleMiddleware");

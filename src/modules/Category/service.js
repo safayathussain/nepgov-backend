@@ -1,4 +1,3 @@
-// services/categoryService.js
 const Category = require("./model");
 
 const createCategory = async (categoryData) => {
