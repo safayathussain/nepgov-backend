@@ -19,6 +19,7 @@ const registerUser = async (userData, role = "user", res) => {
     ...userData,
     password: hashedPassword,
     role,
+    ...(role === "admin" && { isVerified: true })
   });
   await redisClient.set(`otp:${email}`, otp, {
     EX: 300,
@@ -42,14 +43,14 @@ const signIn = async (email, password, res, req) => {
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "strict",
+        sameSite: "None",
         maxAge: 60 * 60 * 1000, // 1 hour
       });
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "strict",
+        sameSite: "None",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
     }
@@ -77,14 +78,14 @@ const adminSignIn = async (email, password, res) => {
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
     secure: true,
-    sameSite: "strict",
+    sameSite: "None",
     maxAge: 60 * 60 * 1000, // 1 hour
   });
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: true,
-    sameSite: "strict",
+    sameSite: "None",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
   return {
@@ -122,13 +123,13 @@ const verifyOtp = async (email, otp, res, req) => {
     res.cookie("refreshToken", accessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "None",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "None",
       maxAge: 60 * 60 * 1000, //1h
     });
   }
@@ -161,13 +162,13 @@ const resetPassword = async (email, newPassword, otp, res, req) => {
     res.cookie("refreshToken", accessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "None",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "strict",
+      sameSite: "None",
       maxAge: 60 * 60 * 1000, //1h
     });
   }

@@ -30,6 +30,8 @@ router.post("/reset-password", resetPassword);
 router.post("/change-password/:id", changePassword);
 router.post("/refresh-token", refreshToken);
 router.post("/logout", logout);
-router.put("/update-profile/:id", authMiddleware, upload.single("profilePicture"), updateProfile);
+router.put("/update-profile/:id", authMiddleware, 
+  // upload.single("profilePicture"),
+   updateProfile);
 
 module.exports = router;

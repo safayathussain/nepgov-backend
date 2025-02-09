@@ -3,6 +3,7 @@ const { generateAccessToken } = require("../utils/function");
 
 const authMiddleware = async (req, res, next) => {
   try {
+    console.log(req)
     let token = req.cookies.accessToken || req.headers["authorization"]?.split(" ")[1] ;
     const refreshToken = req.cookies.refreshToken;
     const cookieConsent = req.headers["x-user-consent"];
@@ -27,7 +28,7 @@ const authMiddleware = async (req, res, next) => {
         res.cookie("accessToken", newAccessToken, {
           httpOnly: true,
           secure: true,
-          sameSite: "strict",
+          sameSite: "None",
           maxAge: 60 * 60 * 1000, // 1 hour
         });
         token = newAccessToken;
