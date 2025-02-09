@@ -1,13 +1,13 @@
 const { body } = require("express-validator");
 
-const VALID_PAGES = ["aboutUs", "cookie-policy", "privacy-policy", "terms-and-conditions"];
+const VALID_PAGES = ["about-us", "cookie-policy", "privacy-policy", "terms-and-conditions"];
 
 const createStaticPageValidation = [
   body("title").notEmpty().withMessage("Title is required"),
   body("content").notEmpty().withMessage("Content is required"),
   body("page")
     .notEmpty().withMessage("Page type is required")
-    .isIn(VALID_PAGES).withMessage("Invalid page type. Must be one of: aboutUs, cookie-policy, privacy-policy, terms-and-conditions"),
+    .isIn(VALID_PAGES).withMessage("Invalid page type. Must be one of: about-us, cookie-policy, privacy-policy, terms-and-conditions"),
 ];
 
 const updateStaticPageValidation = [
@@ -15,7 +15,7 @@ const updateStaticPageValidation = [
   body("content").optional().notEmpty().withMessage("Content cannot be empty"),
   body("page")
     .optional()
-    .isIn(VALID_PAGES).withMessage("Invalid page type. Must be one of: aboutUs, cookie-policy, privacy-policy, terms-and-conditions"),
+    .isIn(VALID_PAGES).withMessage("Invalid page type. Must be one of: about-us, cookie-policy, privacy-policy, terms-and-conditions"),
 ];
 
 module.exports = { createStaticPageValidation, updateStaticPageValidation };

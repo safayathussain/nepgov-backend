@@ -15,7 +15,7 @@ const {
 
 router.post(
   "/create",
-  // upload.single("thumbnail"),
+  upload.single("thumbnail"),
   createArticleValidation,
   authMiddleware,
   createArticle
@@ -23,7 +23,7 @@ router.post(
 router.get("/", getAllArticles);
 router.put(
   "/update/:id",
-  // upload.single("thumbnail"),
+  upload.single("thumbnail"),
   updateArticleValidation,
   authMiddleware,
   updateArticle

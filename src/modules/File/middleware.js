@@ -22,7 +22,7 @@ const uploadForFilesOnly = (req, res, next) => {
       const fileArray = files[key]; // Array of files under the current key
 
       fileArray.forEach((uploadedFile) => {
-        const fileTypes = /jpeg|jpg|png|gif/;
+        const fileTypes = /jpeg|jpg|png/;
         const extname = path.extname(uploadedFile.originalFilename).toLowerCase();
         const mimetype = fileTypes.test(uploadedFile.headers["content-type"]);
 

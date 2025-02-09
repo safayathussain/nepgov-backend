@@ -79,7 +79,8 @@ const updateArticle = async (req, res) => {
     const result = await articleService.updateArticle(
       req.params.id,
       req.user,
-      req.body
+      req.body,
+      req
     );
     sendResponse(res, {
       message: "Article updated successfully",

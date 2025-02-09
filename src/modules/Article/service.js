@@ -55,7 +55,7 @@ const getArticleById = async (id) => {
   return article;
 };
 
-const updateArticle = async (id, userId, updateData) => {
+const updateArticle = async (id, userId, updateData, req) => {
   const article = await Article.findById(id);
   if (!article) throw new Error("Article not found");
   

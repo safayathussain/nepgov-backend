@@ -13,7 +13,7 @@ const staticPageSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    enum: ["aboutUs", "cookie-policy", "privacy-policy", "terms-and-conditions"]
+    enum: ["about-us", "cookie-policy", "privacy-policy", "terms-and-conditions"]
   }
 }, {
   timestamps: true
