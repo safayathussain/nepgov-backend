@@ -29,7 +29,6 @@ const registerUser = async (userData, role = "user", res) => {
   return { data: newUser };
 };
 const signIn = async (email, password, res, req) => {
-  console.log(req.cookieConsent)
 
   const user = await User.findOne({ email }).select("+password");
   if (!user) throw new Error("User not found");

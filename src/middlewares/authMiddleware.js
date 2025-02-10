@@ -42,7 +42,6 @@ const authMiddleware = async (req, res, next) => {
       req.user = decoded.id;
       req.cookieConsent = cookieConsent;
       req.role = decoded.role;
-      console.log(decoded)
       return next();
     } catch (error) {
       return res.status(401).json({ message: "Invalid Access Token" });

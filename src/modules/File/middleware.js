@@ -54,7 +54,6 @@ const uploadForFilesOnly = (req, res, next) => {
     }
 
     req.files = processedFiles; // Attach processed files to the request
-    console.log(req.files);
     next();
   });
 };

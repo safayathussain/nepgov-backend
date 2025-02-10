@@ -6,7 +6,7 @@ const connectRedis = () => {
   });
   redisClient
     .connect()
-    .then(() => console.log("Connected to Redis"))
+    .then(() => console.log("Redis connected"))
     .catch((err) => console.error("Redis connection error:", err));
 
   return redisClient;
