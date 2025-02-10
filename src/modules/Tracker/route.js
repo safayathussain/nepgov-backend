@@ -8,6 +8,7 @@ const {
   updateTracker,
   voteTracker,
   addOption,
+  editOption,
 } = require("./controller");
 const {
   createTrackerValidation,
@@ -40,6 +41,13 @@ router.post(
   roleMiddleware(["admin"]),
   addOptionValidation,
   addOption
+);
+router.put(
+  "/edit-option/:optionId",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  addOptionValidation,
+  editOption
 );
 
 router.post(

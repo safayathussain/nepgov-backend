@@ -135,5 +135,29 @@ const addOption = async (req, res) => {
     });
   }
 };
+const editOption = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return sendResponse(res, {
+        statusCode: 400,
+        success: false,
+        message: errors.array()[0].msg,
+      });
+    }
 
-module.exports = {createTracker, getAllTrackers, getTrackerById, updateTracker, voteTracker, addOption}
+  const result =  await trackerService.editOption(req.params.optionId, req.body,  );
+    sendResponse(res, {
+      message: "Option edited successfully",
+      data: result
+    });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+module.exports = {createTracker, getAllTrackers, getTrackerById, updateTracker, voteTracker, addOption, editOption}

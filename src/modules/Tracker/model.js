@@ -20,8 +20,13 @@ const trackerSchema = new mongoose.Schema({
     required: true
   },
   categories: [{
-    type: String
-  }]
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category"
+  }],
+  votedCount: {
+    type: Number,
+    default: 0
+  }
 }, {
   timestamps: true
 });
