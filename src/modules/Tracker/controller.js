@@ -62,6 +62,21 @@ const getTrackerById = async (req, res) => {
     });
   }
 };
+const deleteTracker = async (req, res) => {
+  try {
+    const tracker = await trackerService.deleteTracker(req.params.id);
+    sendResponse(res, {
+      message: "Tracker deleted successfully",
+      data: tracker,
+    });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 const updateTracker = async (req, res) => {
   try {
@@ -160,4 +175,4 @@ const editOption = async (req, res) => {
   }
 };
 
-module.exports = {createTracker, getAllTrackers, getTrackerById, updateTracker, voteTracker, addOption, editOption}
+module.exports = {createTracker, getAllTrackers, getTrackerById, updateTracker, voteTracker, addOption, editOption, deleteTracker}

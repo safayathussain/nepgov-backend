@@ -12,6 +12,7 @@ const staticPageRoute = require("./modules/StaticPage/route");
 const articleRoute = require("./modules/Article/route"); 
 const fileRoute = require("./modules/File/controller");
 const trackerRoute = require("./modules/Tracker/route");
+const crimeRoute = require("./modules/Crime/route");
 //EndPoint
 
 router.use("/auth", authRoute); 
@@ -21,6 +22,7 @@ router.use("/static-page", staticPageRoute);
 router.use("/article", articleRoute);
 router.use("/file", fileRoute);
 router.use("/tracker", trackerRoute);
+router.use("/crime", crimeRoute)
 
 
 module.exports = router;

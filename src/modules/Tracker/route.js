@@ -9,6 +9,7 @@ const {
   voteTracker,
   addOption,
   editOption,
+  deleteTracker,
 } = require("./controller");
 const {
   createTrackerValidation,
@@ -49,7 +50,12 @@ router.put(
   addOptionValidation,
   editOption
 );
-
+router.delete(
+  "/delete/:id",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  deleteTracker
+);
 router.post(
   "/:id/vote",
   authMiddleware,

@@ -46,7 +46,7 @@ const corsOptions = {
     }
   },
   allowedHeaders: ["Content-Type", "authorization", "X-Requested-With", "x-user-consent"],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
 };
 
 // Apply CORS middleware
