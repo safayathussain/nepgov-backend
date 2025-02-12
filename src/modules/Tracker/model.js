@@ -53,7 +53,25 @@ const trackerVoteSchema = new mongoose.Schema({
   timestamps: true
 });
 
+const trackerOptionSchema = new mongoose.Schema({
+  content: {
+    type: String,
+    required: true
+  },
+  color: {
+    type: String,
+    required: true
+  },
+  votedCount: {
+    type: Number,
+    default: 0
+  }
+}, {
+  timestamps: true
+});
+
 module.exports = {
   Tracker: mongoose.model("Tracker", trackerSchema),
-  TrackerVote: mongoose.model("TrackerVote", trackerVoteSchema)
+  TrackerVote: mongoose.model("TrackerVote", trackerVoteSchema),
+  TrackerOption: mongoose.model("TrackerOption", trackerOptionSchema)
 };

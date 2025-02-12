@@ -2,7 +2,7 @@ const Crime = require("./model");
 
 const createCrime = async (crimeData) => {
   const crime = await Crime.create(crimeData);
-  return crime;
+  return;
 };
 
 const getAllCrimes = async () => {

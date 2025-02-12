@@ -1,12 +1,11 @@
 const { Tracker } = require("./model");
-const VotingOption = require("../votingOption/model");
-const { TrackerVote } = require("./model");
+const { TrackerVote, TrackerOption } = require("./model");
 const mongoose = require("mongoose");
 
 const createTracker = async (trackerData) => {
   // Create voting options first
   const optionPromises = trackerData.options.map((option) =>
-    VotingOption.create({ content: option.content, color: option.color })
+    TrackerOption.create({ content: option.content, color: option.color })
   );
   const createdOptions = await Promise.all(optionPromises);
   const optionIds = createdOptions.map((option) => option._id);
@@ -73,7 +72,7 @@ const updateTracker = async (id, updateData, userId) => {
   // Now, handle the edited options
   if (editedOptions && editedOptions.length > 0) {
     for (const option of editedOptions) {
-      const updatedOption = await VotingOption.findByIdAndUpdate(
+      const updatedOption = await TrackerOption.findByIdAndUpdate(
         option._id,
         option,
         {
@@ -88,7 +87,7 @@ const updateTracker = async (id, updateData, userId) => {
   // Now, handle the deletion of options
   if (deletedOptions && deletedOptions.length > 0) {
     for (const deletedOption of deletedOptions) {
-      const optionToDelete = await VotingOption.findByIdAndDelete(
+      const optionToDelete = await TrackerOption.findByIdAndDelete(
         deletedOption._id
       );
       if (!optionToDelete)
@@ -122,14 +121,14 @@ const voteTracker = async (trackerId, optionId, userId) => {
     user: userId,
     option: optionId,
   });
-  await VotingOption.findByIdAndUpdate(optionId, { $inc: { votedCount: 1 } });
+  await TrackerOption.findByIdAndUpdate(optionId, { $inc: { votedCount: 1 } });
   await Tracker.findByIdAndUpdate(trackerId, { $inc: { votedCount: 1 } });
 };
 
 const addOption = async (trackerId, option) => {
   const tracker = await Tracker.findById(trackerId);
   if (!tracker) throw new Error("Tracker not found");
-  const createdOption = await VotingOption.create({
+  const createdOption = await TrackerOption.create({
     content: option.content,
     color: option.color,
   });
@@ -141,9 +140,9 @@ const addOption = async (trackerId, option) => {
   return createdOption;
 };
 const editOption = async (optionId, data) => {
-  const option = await VotingOption.findById(optionId);
+  const option = await TrackerOption.findById(optionId);
   if (!option) throw new Error("Option not found");
-  const updatedOption = await VotingOption.findByIdAndUpdate(optionId, data, {
+  const updatedOption = await TrackerOption.findByIdAndUpdate(optionId, data, {
     new: true,
   });
 
