@@ -3,23 +3,31 @@ const HomePage = require("./model");
 
 const getHomePage = async () => {
   const homePage = await HomePage.findOne({})
-  .populate({
-    path: "hero.dailyQuestion",
-    populate: { path: "options categories" },
-  })
-  .populate({
-    path: "featuredSurveyTracker.surveys",
-    populate: { path: "questions.options categories" },
-  })
-  .populate({
-    path: "featuredSurveyTracker.trackers",
-    populate: { path: "options categories" },
-  })
-  .populate({
-    path: "liveSurveyTracker.data",
-    populate: { path: "categories questions.options" },
-  }) 
-
+    .populate({
+      path: "hero.dailyQuestion",
+      populate: { path: "options categories" },
+    })
+    .populate({
+      path: "featuredSurveyTracker.surveys",
+      populate: { path: "questions.options categories" },
+    })
+    .populate({
+      path: "featuredSurveyTracker.trackers",
+      populate: { path: "options categories" },
+    })
+    .populate({
+      path: "liveSurveyTracker.data",
+      populate: { path: "categories" },
+    })
+  for (let item of homePage.liveSurveyTracker) {
+    if (item.data) {
+      if (item.type === "Survey") {
+        await item.data.populate("questions.options");
+      } else if (item.type === "Tracker") {
+        await item.data.populate("options");
+      }
+    }
+  }
   return homePage;
 };
 
@@ -36,7 +44,7 @@ const updateHomePage = async (homePageData) => {
       { $set: homePageData },
       { new: true, returnDocument: "after" } // Ensure it returns a Mongoose document
     );
-  } 
+  }
   return await homePage.populate([
     "hero.dailyQuestion",
     "featuredSurveyTracker.surveys",
