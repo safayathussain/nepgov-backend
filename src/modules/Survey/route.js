@@ -33,8 +33,8 @@ router.post(
   "/create",
   authMiddleware,
   roleMiddleware(["admin"]),
+  upload.single("thumbnail"), 
   createSurveyValidation,
-  upload.single("thumbnail"),
   createSurvey
 );
 

@@ -5,12 +5,20 @@ const { sendResponse } = require("../../utils/response");
 const createArticle = async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty())
+    if (!errors.isEmpty()) {
+      if (req.file) {
+        try {
+          await fs.unlink(req.file.path);
+        } catch (err) {
+          console.error("Error deleting file:", err);
+        }
+      }
       return sendResponse(res, {
         statusCode: 400,
         success: false,
         message: errors.array()[0].msg,
       });
+    }
 
     const articleData = {
       ...req.body,
@@ -26,6 +34,13 @@ const createArticle = async (req, res) => {
       data: result,
     });
   } catch (error) {
+    if (req.file) {
+      try {
+        await fs.unlink(req.file.path);
+      } catch (err) {
+        console.error("Error deleting file:", err);
+      }
+    }
     sendResponse(res, {
       statusCode: 400,
       success: false,
@@ -69,12 +84,20 @@ const getArticleById = async (req, res) => {
 const updateArticle = async (req, res) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty())
+    if (!errors.isEmpty()) {
+      if (req.file) {
+        try {
+          await fs.unlink(req.file.path);
+        } catch (err) {
+          console.error("Error deleting file:", err);
+        }
+      }
       return sendResponse(res, {
         statusCode: 400,
         success: false,
         message: errors.array()[0].msg,
       });
+    }
 
     const result = await articleService.updateArticle(
       req.params.id,
@@ -87,6 +110,13 @@ const updateArticle = async (req, res) => {
       data: result,
     });
   } catch (error) {
+    if (req.file) {
+      try {
+        await fs.unlink(req.file.path);
+      } catch (err) {
+        console.error("Error deleting file:", err);
+      }
+    }
     sendResponse(res, {
       statusCode: 400,
       success: false,

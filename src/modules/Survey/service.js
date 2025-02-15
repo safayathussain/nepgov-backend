@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 
 // Survey CRUD
 const createSurvey = async (surveyData) => {
-  console.log(surveyData)
+  console.log(surveyData);
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -52,13 +52,14 @@ const createSurvey = async (surveyData) => {
   }
 };
 const updateSurvey = async (surveyId, updateData) => {
-  const { updatedQuestions, deletedQuestions, topic, categories } = updateData;
+  const { updatedQuestions, deletedQuestions, topic, categories, thumbnail } =
+    updateData;
   const survey = await Survey.findById(surveyId);
   if (!survey) throw new Error("Survey not found");
 
   if (topic) survey.topic = topic;
   if (categories) survey.categories = categories;
-
+  if (thumbnail) survey.thumbnail = thumbnail;
   if (updatedQuestions && updatedQuestions.length > 0) {
     for (const questionData of updatedQuestions) {
       let question;
@@ -102,7 +103,7 @@ const updateSurvey = async (surveyId, updateData) => {
               color: option.color,
             });
             await newOption.save();
-            question.options.push(newOption._id)
+            question.options.push(newOption._id);
             const lastQuestion = survey.questions[survey.questions.length - 1];
             lastQuestion.options.push(newOption._id); // Link the new option to the question
           }
@@ -155,7 +156,6 @@ const updateSurvey = async (surveyId, updateData) => {
     }
   }
 
-
   // Save the updated survey
   await survey.save();
 
@@ -187,10 +187,12 @@ const getAllSurveys = async (query = {}) => {
 };
 
 const getSurveyById = async (id) => {
-  const survey = await Survey.findById(id).populate({
-    path: "questions.options",
-    model: "SurveyQuestionOption",
-  }).populate(["categories"]);
+  const survey = await Survey.findById(id)
+    .populate({
+      path: "questions.options",
+      model: "SurveyQuestionOption",
+    })
+    .populate(["categories"]);
   if (!survey) throw new Error("Survey not found");
   return survey;
 };

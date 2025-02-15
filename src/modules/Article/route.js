@@ -15,17 +15,17 @@ const {
 
 router.post(
   "/create",
+  authMiddleware,
   upload.single("thumbnail"),
   createArticleValidation,
-  authMiddleware,
   createArticle
 );
 router.get("/", getAllArticles);
 router.put(
   "/update/:id",
+  authMiddleware,
   upload.single("thumbnail"),
   updateArticleValidation,
-  authMiddleware,
   updateArticle
 );
 router.delete("/delete/:id", authMiddleware, deleteArticle);
