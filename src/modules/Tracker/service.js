@@ -12,7 +12,7 @@ const createTracker = async (trackerData) => {
 
   // Create tracker with option references and categories as ObjectId
   const categoryIds = trackerData.categories.map((category) =>
-    mongoose.Types.ObjectId(category)
+   new mongoose.Types.ObjectId(category)
   );
   const tracker = await Tracker.create({
     ...trackerData,

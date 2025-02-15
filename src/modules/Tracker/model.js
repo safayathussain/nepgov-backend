@@ -13,7 +13,7 @@ const trackerSchema = new mongoose.Schema({
   },
   options: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: "VotingOption"
+    ref: "TrackerOption"
   }],
   liveEndedAt: {
     type: Date,
@@ -46,7 +46,7 @@ const trackerVoteSchema = new mongoose.Schema({
   },
   option: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "VotingOption",
+    ref: "TrackerOption",
     required: true
   }
 }, {

@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const authMiddleware = require("../../middlewares/authMiddleware");
 const roleMiddleware = require("../../middlewares/roleMiddleware");
+const upload = require("../../utils/upload");
 const {
   createSurvey,
   getAllSurveys,
@@ -33,6 +34,7 @@ router.post(
   authMiddleware,
   roleMiddleware(["admin"]),
   createSurveyValidation,
+  upload.single("thumbnail"),
   createSurvey
 );
 
@@ -41,10 +43,11 @@ router.get("/:id", getSurveyById);
 router.get("/:id/results", getSurveyResults);
 
 router.put(
-  "/:id",
+  "/update/:id",
   authMiddleware,
   roleMiddleware(["admin"]),
   updateSurveyValidation,
+  upload.single("thumbnail"),
   updateSurvey
 );
 

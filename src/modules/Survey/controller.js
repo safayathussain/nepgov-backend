@@ -12,9 +12,9 @@ const createSurvey = async (req, res) => {
         message: errors.array()[0].msg,
       });
     }
-
     const result = await surveyService.createSurvey({
       ...req.body,
+      thumbnail: req.file ? `/uploads/${req.file.filename}` : null,
       user: req.user,
     });
 
@@ -75,7 +75,10 @@ const updateSurvey = async (req, res) => {
     }
     const result = await surveyService.updateSurvey(
       req.params.id,
-      req.body,
+      {
+        ...req.body,
+        ...(req.file && { thumbnail: `/uploads/${req.file.filename}` }),
+      },
       req.user
     );
 

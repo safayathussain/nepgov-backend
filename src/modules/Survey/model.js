@@ -33,6 +33,10 @@ const surveySchema = new mongoose.Schema(
         ref: "Category",
       },
     ],
+    thumbnail: {
+      type: String,
+      required: true,
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -14,6 +14,7 @@ const fileRoute = require("./modules/File/controller");
 const trackerRoute = require("./modules/Tracker/route");
 const surveyRoute = require("./modules/Survey/route");
 const crimeRoute = require("./modules/Crime/route");
+const HomePageRoute = require("./modules/HomePage/route");
 //EndPoint
 
 router.use("/auth", authRoute); 
@@ -25,6 +26,8 @@ router.use("/file", fileRoute);
 router.use("/tracker", trackerRoute);
 router.use("/survey", surveyRoute);
 router.use("/crime", crimeRoute)
+router.use("/home-page", HomePageRoute)
+
 
 
 module.exports = router;

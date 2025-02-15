@@ -3,13 +3,15 @@ const mongoose = require("mongoose");
 
 // Survey CRUD
 const createSurvey = async (surveyData) => {
+  console.log(surveyData)
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
+    // Create options documents first
     const questionsWithOptions = await Promise.all(
       surveyData.questions.map(async (questionData) => {
-        const options = await SurveyQuestionOption.create(
+        const options = await SurveyQuestionOption.insertMany(
           questionData.options.map((opt) => ({
             content: opt.content,
             color: opt.color,
@@ -24,7 +26,8 @@ const createSurvey = async (surveyData) => {
       })
     );
 
-    const survey = await Survey.create(
+    // Create the survey document
+    const [survey] = await Survey.create(
       [
         {
           ...surveyData,
@@ -35,7 +38,9 @@ const createSurvey = async (surveyData) => {
     );
 
     await session.commitTransaction();
-    return await Survey.findById(survey[0]._id).populate({
+
+    // Fetch and populate the created survey
+    return await Survey.findById(survey._id).populate({
       path: "questions.options",
       model: "SurveyQuestionOption",
     });
@@ -50,15 +55,29 @@ const updateSurvey = async (surveyId, updateData) => {
   const { updatedQuestions, deletedQuestions, topic, categories } = updateData;
   const survey = await Survey.findById(surveyId);
   if (!survey) throw new Error("Survey not found");
+
   if (topic) survey.topic = topic;
   if (categories) survey.categories = categories;
+
   if (updatedQuestions && updatedQuestions.length > 0) {
     for (const questionData of updatedQuestions) {
-      const question = survey.questions.id(questionData._id);
-      if (!question)
-        throw new Error(`Question with ID ${questionData._id} not found`);
-      if (questionData.question) {
-        question.question = questionData.question;
+      let question;
+      if (questionData._id) {
+        // Update existing question
+        question = survey.questions.id(questionData._id);
+        if (!question)
+          throw new Error(`Question with ID ${questionData._id} not found`);
+
+        if (questionData.question) {
+          question.question = questionData.question;
+        }
+      } else {
+        // Create new question
+        question = {
+          question: questionData.question,
+          options: [], // Initialize options as an empty array
+        };
+        survey.questions.push(question);
       }
 
       // Handle updated options
@@ -67,15 +86,36 @@ const updateSurvey = async (surveyId, updateData) => {
         questionData.updatedOptions.length > 0
       ) {
         for (const option of questionData.updatedOptions) {
-          const updatedOption = await SurveyQuestionOption.findByIdAndUpdate(
-            option._id,
-            { content: option.content, color: option.color },
-            { new: true }
-          );
-          if (!updatedOption)
-            throw new Error(`Option with ID ${option._id} not found`);
+          if (option._id) {
+            // Update existing option
+            const updatedOption = await SurveyQuestionOption.findByIdAndUpdate(
+              option._id,
+              { content: option.content, color: option.color },
+              { new: true }
+            );
+            if (!updatedOption)
+              throw new Error(`Option with ID ${option._id} not found`);
+          } else {
+            // Create new option
+            const newOption = new SurveyQuestionOption({
+              content: option.content,
+              color: option.color,
+            });
+            await newOption.save();
+            question.options.push(newOption._id)
+            const lastQuestion = survey.questions[survey.questions.length - 1];
+            lastQuestion.options.push(newOption._id); // Link the new option to the question
+          }
         }
       }
+      survey.questions = survey.questions.map(
+        (q) => {
+          console.log(q._id, question._id);
+          return q;
+        }
+
+        // q._id === question._id  ? question : q
+      );
 
       // Handle deleted options
       if (
@@ -115,6 +155,7 @@ const updateSurvey = async (surveyId, updateData) => {
     }
   }
 
+
   // Save the updated survey
   await survey.save();
 
@@ -141,6 +182,7 @@ const getAllSurveys = async (query = {}) => {
       path: "questions.options",
       model: "SurveyQuestionOption",
     })
+    .populate(["categories"])
     .sort({ createdAt: -1 });
 };
 
@@ -148,7 +190,7 @@ const getSurveyById = async (id) => {
   const survey = await Survey.findById(id).populate({
     path: "questions.options",
     model: "SurveyQuestionOption",
-  });
+  }).populate(["categories"]);
   if (!survey) throw new Error("Survey not found");
   return survey;
 };
@@ -471,5 +513,5 @@ module.exports = {
   voteSurvey,
   getSurveyResults,
   updateSurvey,
-  deleteSurvey
+  deleteSurvey,
 };
