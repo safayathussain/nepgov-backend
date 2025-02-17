@@ -58,11 +58,7 @@ const getArticleById = async (id) => {
 const updateArticle = async (id, userId, updateData, req) => {
   const article = await Article.findById(id);
   if (!article) throw new Error("Article not found");
-  
-  // Check if user owns the article
-  if (article.user.toString() !== userId.toString()) {
-    throw new Error("Not authorized to update this article");
-  }
+   
   
   if (updateData.categories) {
     // Verify new categories exist

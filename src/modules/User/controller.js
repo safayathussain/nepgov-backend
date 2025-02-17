@@ -17,5 +17,20 @@ const getAllUsers = async (req, res) => {
     });
   }
 };
+const getUserById = async (req, res) => {
+  try {
+    const result = await userService.getUserById(req.params.id);
+    sendResponse(res, {
+      message: "User retrived successfully",
+      data: result,
+    });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
-module.exports = { getAllUsers };
+module.exports = { getAllUsers, getUserById };

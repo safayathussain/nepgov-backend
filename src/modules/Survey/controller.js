@@ -22,6 +22,7 @@ const createSurvey = async (req, res) => {
     }
     const result = await surveyService.createSurvey({
       ...req.body,
+      questions: JSON.parse(req.body?.questions),
       thumbnail: req.file ? `/uploads/${req.file.filename}` : null,
       user: req.user,
     });
