@@ -22,7 +22,7 @@ const createArticle = async (articleData) => {
 };
 
 const getAllArticles = async (query = {}) => {
-  const { category, search } = query;
+  const { category, search, count } = query; 
 
   let filter = {};
 
@@ -37,13 +37,18 @@ const getAllArticles = async (query = {}) => {
     ];
   }
 
-  const articles = await Article.find(filter)
+  let queryBuilder = Article.find(filter)
     .populate("categories", "name")
     .populate("user", "name email")
     .sort({ createdAt: -1 });
 
-  return articles ;
+  if (count) {
+    queryBuilder = queryBuilder.limit(parseInt(count, 10));
+  }
+
+  return await queryBuilder;
 };
+
 
 
 const getArticleById = async (id) => {
