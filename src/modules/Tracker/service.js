@@ -24,15 +24,11 @@ const createTracker = async (trackerData) => {
 };
 
 const getAllTrackers = async (query = {}) => {
-  const { categories } = query;
+  const { category } = query;
   const filter = {};
 
-  if (categories) {
-    // Convert category IDs to ObjectIds if they are in string form
-    const categoryIds = categories
-      .split(",")
-      .map((category) => mongoose.Types.ObjectId(category));
-    filter.categories = { $in: categoryIds };
+  if (category) {
+    filter.categories = category;
   }
 
   return await Tracker.find(filter)

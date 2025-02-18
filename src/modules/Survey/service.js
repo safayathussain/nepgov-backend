@@ -167,14 +167,11 @@ const updateSurvey = async (surveyId, updateData) => {
     .populate("categories");
 };
 const getAllSurveys = async (query = {}) => {
-  const { categories } = query;
+  const { category } = query;
   const filter = {};
 
-  if (categories) {
-    const categoryIds = categories
-      .split(",")
-      .map((category) => mongoose.Types.ObjectId(category));
-    filter.categories = { $in: categoryIds };
+  if (category) {
+    filter.categories = category;
   }
 
   return await Survey.find(filter)

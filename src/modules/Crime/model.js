@@ -16,7 +16,6 @@ const CrimeSchema = new mongoose.Schema(
     },
     time: {
       type: String,
-      required: true,
     },
     crimeDetails: {
       type: String,
