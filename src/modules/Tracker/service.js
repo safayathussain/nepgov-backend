@@ -31,9 +31,80 @@ const getAllTrackers = async (query = {}) => {
     filter.categories = category;
   }
 
-  return await Tracker.find(filter)
-    .populate(["options", "categories"]) // Populate categories field
+  const trackers = await Tracker.find(filter)
+    .populate(["options", "categories"])
     .sort({ createdAt: -1 });
+
+  const trackerWithVotes = await Promise.all(trackers.map(async (item) => {
+    const votes = await TrackerVote.find({ tracker: item._id }).populate('option');
+    const monthYearVotes = {};
+
+    if (votes.length > 0) {
+      const voteDates = votes.map(vote => new Date(vote.createdAt));
+      const startDate = new Date(Math.min(...voteDates));
+      const endDate = new Date(Math.max(...voteDates));
+
+      startDate.setDate(1);
+      endDate.setDate(1);
+
+      for (let date = new Date(startDate); date <= endDate; date.setMonth(date.getMonth() + 1)) {
+        const monthYearKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        monthYearVotes[monthYearKey] = {
+          total: 0,
+          options: item.options.reduce((acc, option) => {
+            acc[option._id.toString()] = {
+              votes: 0,
+              content: option.content,
+              color: option.color
+            };
+            return acc;
+          }, {})
+        };
+      }
+
+      votes.forEach((vote) => {
+        const voteDate = new Date(vote.createdAt);
+        const monthYearKey = `${voteDate.getFullYear()}-${String(voteDate.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (monthYearVotes[monthYearKey]) {
+          monthYearVotes[monthYearKey].total++;
+          monthYearVotes[monthYearKey].options[vote.option._id.toString()].votes++;
+        }
+      });
+    }
+
+    // Add previous month if monthYearVotes has only one key
+    if (Object.keys(monthYearVotes).length === 1) {
+      const currentKey = Object.keys(monthYearVotes)[0];
+      const [year, month] = currentKey.split('-').map(Number);
+      
+      let prevYear = year;
+      let prevMonth = month - 1;
+      
+      if (prevMonth === 0) {
+        prevMonth = 12;
+        prevYear--;
+      }
+      
+      const prevMonthKey = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+      
+      monthYearVotes[prevMonthKey] = {
+        total: 0,
+        options: item.options.reduce((acc, option) => {
+          acc[option._id.toString()] = {
+            votes: 0,
+            content: option.content,
+            color: option.color
+          };
+          return acc;
+        }, {})
+      };
+    }
+
+    return { ...item.toObject(), monthYearVotes };
+  }));
+
+  return trackerWithVotes;
 };
 
 const getTrackerById = async (id) => {
@@ -49,7 +120,6 @@ const checkVote = async (id, userId) => {
     tracker: id,
     user: userId,
   });
-  // if (!trackerVote) throw new Error("Tracker not found");
   return trackerVote;
 };
 const deleteTracker = async (id) => {

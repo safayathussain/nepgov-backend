@@ -61,7 +61,6 @@ router.delete(
 router.post(
   "/:id/vote",
   authMiddleware,
-  roleMiddleware(["admin"]),
   voteValidation,
   voteTracker
 );
