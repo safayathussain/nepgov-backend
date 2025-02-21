@@ -10,6 +10,7 @@ const {
   addOption,
   editOption,
   deleteTracker,
+  checkVote,
 } = require("./controller");
 const {
   createTrackerValidation,
@@ -27,6 +28,7 @@ router.post(
 );
 
 router.get("/", getAllTrackers);
+router.get("/checkVote/:id", authMiddleware, checkVote);
 router.get("/:id", getTrackerById);
 
 router.put(

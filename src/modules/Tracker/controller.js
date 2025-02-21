@@ -49,7 +49,22 @@ const getAllTrackers = async (req, res) => {
 
 const getTrackerById = async (req, res) => {
   try {
-    const tracker = await trackerService.getTrackerById(req.params.id);
+    const tracker = await trackerService.getTrackerById(req.params.id, req.user);
+    sendResponse(res, {
+      message: "Tracker retrieved successfully",
+      data: tracker,
+    });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: error.message,
+    });
+  }
+};
+const checkVote = async (req, res) => {
+  try {
+    const tracker = await trackerService.checkVote(req.params.id, req.user);
     sendResponse(res, {
       message: "Tracker retrieved successfully",
       data: tracker,
@@ -114,8 +129,9 @@ const voteTracker = async (req, res) => {
       });
     }
 
-    await trackerService.voteTracker(req.params.id, req.body.optionId, req.user);
+    const result =  await trackerService.voteTracker(req.params.id, req.body.optionId, req.user);
     sendResponse(res, {
+      data: result,
       message: "Vote recorded successfully",
     });
   } catch (error) {
@@ -175,4 +191,4 @@ const editOption = async (req, res) => {
   }
 };
 
-module.exports = {createTracker, getAllTrackers, getTrackerById, updateTracker, voteTracker, addOption, editOption, deleteTracker}
+module.exports = {createTracker, getAllTrackers, getTrackerById, updateTracker, voteTracker, addOption, editOption, deleteTracker, checkVote}

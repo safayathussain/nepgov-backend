@@ -11,8 +11,8 @@ const createTracker = async (trackerData) => {
   const optionIds = createdOptions.map((option) => option._id);
 
   // Create tracker with option references and categories as ObjectId
-  const categoryIds = trackerData.categories.map((category) =>
-   new mongoose.Types.ObjectId(category)
+  const categoryIds = trackerData.categories.map(
+    (category) => new mongoose.Types.ObjectId(category)
   );
   const tracker = await Tracker.create({
     ...trackerData,
@@ -44,6 +44,14 @@ const getTrackerById = async (id) => {
   if (!tracker) throw new Error("Tracker not found");
   return tracker;
 };
+const checkVote = async (id, userId) => {
+  const trackerVote = await TrackerVote.findOne({
+    tracker: id,
+    user: userId,
+  });
+  // if (!trackerVote) throw new Error("Tracker not found");
+  return trackerVote;
+};
 const deleteTracker = async (id) => {
   const tracker = await Tracker.findByIdAndDelete(id);
   if (!tracker) throw new Error("Tracker not found");
@@ -52,7 +60,7 @@ const deleteTracker = async (id) => {
 };
 
 const updateTracker = async (id, updateData, userId) => {
-  const { editedOptions, deletedOptions, ...trackerData } = updateData;
+  const { editedOptions, deletedOptions, options, ...trackerData } = updateData;
 
   // Ensure that the tracker exists and belongs to the user
   const tracker = await Tracker.findOne({ _id: id });
@@ -68,15 +76,28 @@ const updateTracker = async (id, updateData, userId) => {
   // Now, handle the edited options
   if (editedOptions && editedOptions.length > 0) {
     for (const option of editedOptions) {
-      const updatedOption = await TrackerOption.findByIdAndUpdate(
-        option._id,
-        option,
-        {
-          new: true,
-        }
-      );
-      if (!updatedOption)
-        throw new Error(`Option with ID ${option._id} not found`);
+      if (option._id) {
+        const updatedOption = await TrackerOption.findByIdAndUpdate(
+          option._id,
+          option,
+          {
+            new: true,
+          }
+        );
+        if (!updatedOption)
+          throw new Error(`Option with ID ${option._id} not found`);
+      } else {
+        const newOption = await TrackerOption.create({
+          content: option.content,
+          color: option.color,
+        });
+
+        await Tracker.findByIdAndUpdate(
+          id,
+          { $push: { options: newOption._id } },
+          { new: true }
+        );
+      }
     }
   }
 
@@ -119,6 +140,7 @@ const voteTracker = async (trackerId, optionId, userId) => {
   });
   await TrackerOption.findByIdAndUpdate(optionId, { $inc: { votedCount: 1 } });
   await Tracker.findByIdAndUpdate(trackerId, { $inc: { votedCount: 1 } });
+  return tracker.populate("options");
 };
 
 const addOption = async (trackerId, option) => {
@@ -154,4 +176,5 @@ module.exports = {
   addOption,
   editOption,
   deleteTracker,
+  checkVote,
 };
