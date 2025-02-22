@@ -1,3 +1,4 @@
+const { calculateAge } = require("../../utils/function");
 const { Tracker } = require("./model");
 const { TrackerVote, TrackerOption } = require("./model");
 const mongoose = require("mongoose");
@@ -122,6 +123,206 @@ const checkVote = async (id, userId) => {
   });
   return trackerVote;
 };
+const trackerResult = async (trackerId, query, userId) => {
+  try {
+    // Parse query parameters
+    const ageRange = query.age ? query.age.split('-').map(Number) : null;
+    const gender = query.gender === "null" ? null : query.gender ?? null;
+
+    const monthDuration = query.monthDuration ? parseInt(query.monthDuration) : null;
+
+    // Get tracker with options
+    const tracker = await Tracker.findById(trackerId).populate('options');
+    if (!tracker) {
+      throw new Error('Tracker not found');
+    }
+
+    // Get all votes for this tracker
+    let votes = await TrackerVote.find({ tracker: trackerId }).populate('option').populate('user');
+    
+    // Filter votes based on user criteria
+    votes = votes.filter(vote => {
+      const user = vote.user;
+      if (!user) return false;
+
+      // Filter by gender
+      if (gender && user.gender !== gender) return false;
+
+      // Filter by age
+      if (ageRange) {
+        const userAge = calculateAge(user.dob);
+        if (userAge < ageRange[0] || userAge > ageRange[1]) return false;
+      }
+
+      return true;
+    });
+
+    // Initialize monthYearVotes object
+    const monthYearVotes = {};
+
+    if (votes.length > 0) {
+      // Find date range
+      let startDate, endDate;
+      if (monthDuration) {
+        endDate = new Date(tracker.liveEndedAt);
+        startDate = new Date(endDate);
+        startDate.setMonth(startDate.getMonth() - monthDuration);
+      } else {
+        const voteDates = votes.map(vote => new Date(vote.createdAt));
+        startDate = new Date(Math.min(...voteDates));
+        endDate = new Date(tracker.liveEndedAt);
+      }
+
+      // Set to first of each month for consistent comparison
+      startDate.setDate(1);
+      endDate.setDate(1);
+
+      // Create entries for each month in the range
+      for (let date = new Date(startDate); date <= endDate; date.setMonth(date.getMonth() + 1)) {
+        const monthYearKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        monthYearVotes[monthYearKey] = {
+          total: 0,
+          options: tracker.options.reduce((acc, option) => {
+            acc[option._id.toString()] = {
+              votes: 0,
+              content: option.content,
+              color: option.color
+            };
+            return acc;
+          }, {})
+        };
+      }
+
+      // Count votes for each month
+      votes.forEach((vote) => {
+        const voteDate = new Date(vote.createdAt);
+        if (voteDate >= startDate && voteDate <= endDate) {
+          const monthYearKey = `${voteDate.getFullYear()}-${String(voteDate.getMonth() + 1).padStart(2, '0')}`;
+          
+          if (monthYearVotes[monthYearKey]) {
+            monthYearVotes[monthYearKey].total++;
+            monthYearVotes[monthYearKey].options[vote.option._id.toString()].votes++;
+          }
+        }
+      });
+
+      // Add previous month if only one month exists
+      if (Object.keys(monthYearVotes).length === 1) {
+        const currentKey = Object.keys(monthYearVotes)[0];
+        const [year, month] = currentKey.split('-').map(Number);
+        
+        let prevYear = year;
+        let prevMonth = month - 1;
+        
+        if (prevMonth === 0) {
+          prevMonth = 12;
+          prevYear--;
+        }
+        
+        const prevMonthKey = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+        
+        monthYearVotes[prevMonthKey] = {
+          total: 0,
+          options: tracker.options.reduce((acc, option) => {
+            acc[option._id.toString()] = {
+              votes: 0,
+              content: option.content,
+              color: option.color
+            };
+            return acc;
+          }, {})
+        };
+      }
+    } else {
+      // If no votes, create entries for end month and previous month
+      const endDate = new Date(tracker.liveEndedAt);
+      const currentKey = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`;
+      
+      let prevYear = endDate.getFullYear();
+      let prevMonth = endDate.getMonth();
+      
+      if (prevMonth === 0) {
+        prevMonth = 12;
+        prevYear--;
+      }
+      
+      const prevMonthKey = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+      
+      [currentKey, prevMonthKey].forEach(key => {
+        monthYearVotes[key] = {
+          total: 0,
+          options: tracker.options.reduce((acc, option) => {
+            acc[option._id.toString()] = {
+              votes: 0,
+              content: option.content,
+              color: option.color
+            };
+            return acc;
+          }, {})
+        };
+      });
+    }
+
+    // Calculate total votes for each option across all months
+    const optionTotalVotes = tracker.options.reduce((acc, option) => {
+      acc[option._id.toString()] = votes.filter(
+        vote => vote.option._id.toString() === option._id.toString()
+      ).length;
+      return acc;
+    }, {});
+
+    // Convert to chart.js format
+    const labels = Object.keys(monthYearVotes)
+      .sort()
+      .map(key => {
+        const [year, month] = key.split('-');
+        return new Date(year, month - 1).toLocaleString('default', { month: 'short', year: 'numeric' });
+      });
+
+    const datasets = tracker.options.map(option => {
+      const optionId = option._id.toString();
+      return {
+        label: option.content,
+        data: Object.keys(monthYearVotes)
+          .sort()
+          .map(monthKey => {
+            const monthData = monthYearVotes[monthKey];
+            const optionVotes = monthData.options[optionId].votes;
+            return monthData.total === 0 ? "0.0" : 
+              ((optionVotes / monthData.total) * 100).toFixed(1);
+          }),
+        borderColor: option.color,
+        backgroundColor: `${option.color}80`,
+        tension: 0.4
+      };
+    });
+
+    return {
+      labels,
+      datasets,
+      monthlyData: monthYearVotes,
+      totalVotes: votes.length,
+      topic: tracker.topic,
+      options: tracker.options.map(option => {
+        const optionId = option._id.toString();
+        const optionVotes = optionTotalVotes[optionId];
+        return {
+          _id: option._id,
+          content: option.content,
+          color: option.color,
+          totalVotes: optionVotes,
+          percentage: votes.length > 0 
+            ? ((optionVotes / votes.length) * 100).toFixed(1)
+            : "0.0"
+        };
+      })
+    };
+  } catch (error) {
+    throw new Error(`Error analyzing tracker data: ${error.message}`);
+  }
+};
+
+
 const deleteTracker = async (id) => {
   const tracker = await Tracker.findByIdAndDelete(id);
   if (!tracker) throw new Error("Tracker not found");
@@ -247,4 +448,5 @@ module.exports = {
   editOption,
   deleteTracker,
   checkVote,
+  trackerResult
 };

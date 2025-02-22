@@ -11,6 +11,7 @@ const {
   editOption,
   deleteTracker,
   checkVote,
+  trackerResult,
 } = require("./controller");
 const {
   createTrackerValidation,
@@ -29,8 +30,8 @@ router.post(
 
 router.get("/", getAllTrackers);
 router.get("/checkVote/:id", authMiddleware, checkVote);
+router.get("/result/:id", trackerResult)
 router.get("/:id", getTrackerById);
-
 router.put(
   "/update/:id",
   authMiddleware,
