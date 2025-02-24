@@ -1,6 +1,7 @@
-// service.js
 const HomePage = require("./model");
-
+const { Tracker } = require("../Tracker/model");
+const { Survey } = require("../Survey/model");
+const { isLive } = require("../../utils/function");
 const getHomePage = async () => {
   const homePage = await HomePage.findOne({})
     .populate({
@@ -18,7 +19,7 @@ const getHomePage = async () => {
     .populate({
       path: "liveSurveyTracker.data",
       populate: { path: "categories" },
-    })
+    });
   for (let item of homePage.liveSurveyTracker) {
     if (item.data) {
       if (item.type === "Survey") {
@@ -35,16 +36,35 @@ const updateHomePage = async (homePageData) => {
   let homePage = await HomePage.findOne({});
 
   if (!homePage) {
-    // If no homepage config exists, create a new one
     homePage = await HomePage.create(homePageData);
   } else {
-    // Update existing homepage config and return the updated document
+    if (homePageData.liveSurveyTracker) {
+      // First map to create array of Promises that resolve to boolean values
+      const filterResults = await Promise.all(
+        homePageData.liveSurveyTracker.map(async (item) => {
+          if (item?.type === "Survey") {
+            const survey = await Survey.findById(item.data);
+            return isLive(survey.liveEndedAt);
+          } else {
+            const tracker = await Tracker.findById(item.data);
+            return isLive(tracker.liveEndedAt);
+          }
+        })
+      );
+      
+      // Then filter the original array using the results
+      homePageData.liveSurveyTracker = homePageData.liveSurveyTracker.filter(
+        (_, index) => filterResults[index]
+      );
+    }
+
     homePage = await HomePage.findOneAndUpdate(
       {},
       { $set: homePageData },
-      { new: true, returnDocument: "after" } // Ensure it returns a Mongoose document
+      { new: true, returnDocument: "after" }
     );
   }
+
   return await homePage.populate([
     "hero.dailyQuestion",
     "featuredSurveyTracker.surveys",

@@ -60,9 +60,19 @@ const updateSurveyValidation = [
 ];
 
 const voteValidation = [
-  body("questionId").notEmpty().withMessage("Question ID is required"),
-  body("optionId").notEmpty().withMessage("Option ID is required"),
+  body("votes")
+    .isArray({ min: 1 })
+    .withMessage("Votes must be an array and cannot be empty"),
+  
+  body("votes.*.questionId")
+    .notEmpty()
+    .withMessage("Question ID is required for each vote"),
+  
+  body("votes.*.optionId")
+    .notEmpty()
+    .withMessage("Option ID is required for each vote"),
 ];
+
 
 const addQuestionValidation = [
   body("question").notEmpty().withMessage("Question text is required"),

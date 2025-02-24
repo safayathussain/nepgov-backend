@@ -1,3 +1,4 @@
+const { isLive } = require("../../utils/function");
 const { Survey, SurveyVote, SurveyQuestionOption } = require("./model");
 const mongoose = require("mongoose");
 
@@ -52,14 +53,21 @@ const createSurvey = async (surveyData) => {
   }
 };
 const updateSurvey = async (surveyId, updateData) => {
-  const { updatedQuestions, deletedQuestions, topic, categories, thumbnail } =
-    updateData;
+  const {
+    updatedQuestions,
+    deletedQuestions,
+    topic,
+    categories,
+    thumbnail,
+    liveEndedAt,
+  } = updateData;
   const survey = await Survey.findById(surveyId);
   if (!survey) throw new Error("Survey not found");
 
   if (topic) survey.topic = topic;
   if (categories) survey.categories = categories;
   if (thumbnail) survey.thumbnail = thumbnail;
+  if (liveEndedAt) survey.liveEndedAt = liveEndedAt;
   if (updatedQuestions && updatedQuestions.length > 0) {
     for (const questionData of updatedQuestions) {
       let question;
@@ -399,67 +407,63 @@ const removeQuestionOption = async (surveyId, questionId, optionId) => {
 };
 
 // Voting
-const voteSurvey = async (surveyId, questionId, optionId, userId) => {
+ 
+const voteSurvey = async (surveyId, votes, userId) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    console.log(`Transaction started with session: ${session.id}`);
-
     const survey = await Survey.findById(surveyId).session(session);
     if (!survey) throw new Error("Survey not found");
 
-    if (!survey.isLive || survey.liveEndedAt < new Date()) {
+    if (!isLive(survey.liveEndedAt)) {
       throw new Error("Survey is not active");
     }
 
-    const question = survey.questions.id(questionId);
-    if (!question) throw new Error("Question not found");
+    // Validate all votes before proceeding
+    for (const { questionId, optionId } of votes) {
+      const question = survey.questions.id(questionId);
+      if (!question) throw new Error(`Question ${questionId} not found`);
 
-    console.log(`Option ID: ${optionId}`);
-    if (!question.options.includes(optionId)) {
-      throw new Error("Invalid option for this question");
+      if (!question.options.includes(optionId)) {
+        throw new Error(`Invalid option ${optionId} for question ${questionId}`);
+      }
+
+      const existingVote = await SurveyVote.findOne({
+        survey: surveyId,
+        question: questionId,
+        user: userId,
+      }).session(session);
+
+      if (existingVote) {
+        throw new Error(`User has already voted this survey`);
+      }
     }
 
-    const existingVote = await SurveyVote.findOne({
+    // Insert all votes in bulk
+    const voteDocuments = votes.map(({ questionId, optionId }) => ({
       survey: surveyId,
       question: questionId,
+      option: optionId,
       user: userId,
-    }).session(session);
+    }));
 
-    if (existingVote) {
-      throw new Error("User has already voted for this question");
-    }
+    await SurveyVote.insertMany(voteDocuments, { session });
 
-    await SurveyVote.create(
-      [
-        {
-          survey: surveyId,
-          question: questionId,
-          option: optionId,
-          user: userId,
-        },
-      ],
-      { session }
+    // Increment voted counts for each selected option
+    const optionUpdates = votes.map(({ optionId }) =>
+      SurveyQuestionOption.findByIdAndUpdate(optionId, { $inc: { votedCount: 1 } }, { session })
     );
 
-    await SurveyQuestionOption.findByIdAndUpdate(
-      optionId,
-      { $inc: { votedCount: 1 } },
-      { session }
-    );
+    await Promise.all(optionUpdates);
 
     await session.commitTransaction();
-    console.log(
-      `Transaction committed successfully for session: ${session.id}`
-    );
+    return { success: true, message: "Votes submitted successfully!" };
   } catch (error) {
-    console.error(`Error occurred: ${error.message}`);
     await session.abortTransaction();
     throw error;
   } finally {
     session.endSession();
-    console.log(`Session ended: ${session.id}`);
   }
 };
 
@@ -498,6 +502,40 @@ const getSurveyResults = async (surveyId) => {
 
   return results;
 };
+const checkVote = async (surveyId, userId) => {
+  try {
+    // Get the survey with all questions and their options populated
+    const survey = await Survey.findById(surveyId).populate({
+      path: "questions.options",
+      model: "SurveyQuestionOption",
+    });
+
+    if (!survey) {
+      throw new Error("Survey not found");
+    }
+
+    // Get all votes by this user for this survey
+    const userVotes = await SurveyVote.find({
+      survey: surveyId,
+      user: userId,
+    }).populate("option");
+
+    // Create a map of question ID to selected option
+    const questionVoteMap = {};
+    survey.questions.forEach((question) => {
+      // Find the vote for this question
+      const vote = userVotes.find(
+        (v) => v.question.toString() === question._id.toString()
+      );
+      questionVoteMap[question._id] = vote?.option?._id;
+    });
+
+    return questionVoteMap;
+  } catch (error) {
+    console.error("Error checking votes:", error);
+    throw error;
+  }
+};
 
 module.exports = {
   createSurvey,
@@ -513,4 +551,5 @@ module.exports = {
   getSurveyResults,
   updateSurvey,
   deleteSurvey,
+  checkVote,
 };

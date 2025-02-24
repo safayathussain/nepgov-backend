@@ -153,8 +153,7 @@ const voteSurvey = async (req, res) => {
 
     await surveyService.voteSurvey(
       req.params.id,
-      req.body.questionId,
-      req.body.optionId,
+      req.body.votes, 
       req.user
     );
 
@@ -175,6 +174,21 @@ const getSurveyResults = async (req, res) => {
     const results = await surveyService.getSurveyResults(req.params.id);
     sendResponse(res, {
       message: "Survey results retrieved successfully",
+      data: results,
+    });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: error.message,
+    });
+  }
+};
+const checkVote = async (req, res) => {
+  try {
+    const results = await surveyService.checkVote(req.params.id, req.user);
+    sendResponse(res, {
+      message: "Survey option selected by user retrieved successfully",
       data: results,
     });
   } catch (error) {
@@ -352,4 +366,5 @@ module.exports = {
   removeQuestionOption,
   updateQuestion,
   updateQuestionOption,
+  checkVote
 };

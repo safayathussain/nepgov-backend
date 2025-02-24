@@ -15,7 +15,8 @@ const {
   removeQuestion,
   removeQuestionOption,
   updateQuestion,
-  updateQuestionOption
+  updateQuestionOption,
+  checkVote
 } = require("./controller");
 
 const {
@@ -39,8 +40,9 @@ router.post(
 );
 
 router.get("/", getAllSurveys);
-router.get("/:id", getSurveyById);
 router.get("/:id/results", getSurveyResults);
+router.get("/checkVote/:id", authMiddleware, checkVote);
+router.get("/:id", getSurveyById);
 
 router.put(
   "/update/:id",

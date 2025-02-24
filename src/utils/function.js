@@ -36,10 +36,18 @@ function calculateAge(dob) {
   }
   return age;
 }
+
+
+ const isLive = (dateString) => {
+  const currentDate = new Date();
+  const givenDate = new Date(dateString);
+  return givenDate > currentDate;
+};
 module.exports = {
   generateToken,
   generateOTP,
   generateAccessToken,
   generateRefreshToken,
-  calculateAge
+  calculateAge,
+  isLive
 };
