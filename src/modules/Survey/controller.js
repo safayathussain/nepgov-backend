@@ -22,7 +22,7 @@ const createSurvey = async (req, res) => {
     }
     const result = await surveyService.createSurvey({
       ...req.body,
-      questions: JSON.parse(req.body?.questions),
+      questions: req.body?.questions,
       thumbnail: req.file ? `/uploads/${req.file.filename}` : null,
       user: req.user,
     });
@@ -96,6 +96,7 @@ const updateSurvey = async (req, res) => {
         message: errors.array()[0].msg,
       });
     }
+    console.log(req.body);
     const result = await surveyService.updateSurvey(
       req.params.id,
       {
@@ -151,11 +152,7 @@ const voteSurvey = async (req, res) => {
       });
     }
 
-    await surveyService.voteSurvey(
-      req.params.id,
-      req.body.votes, 
-      req.user
-    );
+    await surveyService.voteSurvey(req.params.id, req.body.votes, req.user);
 
     sendResponse(res, {
       message: "Vote recorded successfully",
@@ -174,6 +171,21 @@ const getSurveyResults = async (req, res) => {
     const results = await surveyService.getSurveyResults(req.params.id);
     sendResponse(res, {
       message: "Survey results retrieved successfully",
+      data: results,
+    });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: error.message,
+    });
+  }
+};
+const getQuestionResults = async (req, res) => {
+  try {
+    const results = await surveyService.getQuestionResults(req.params.id, req.params.questionId, req.query);
+    sendResponse(res, {
+      message: "Survey question results retrieved successfully",
       data: results,
     });
   } catch (error) {
@@ -360,11 +372,12 @@ module.exports = {
   deleteSurvey,
   voteSurvey,
   getSurveyResults,
+  getQuestionResults,
   addQuestion,
   addQuestionOption,
   removeQuestion,
   removeQuestionOption,
   updateQuestion,
   updateQuestionOption,
-  checkVote
+  checkVote,
 };

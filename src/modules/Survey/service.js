@@ -1,4 +1,4 @@
-const { isLive } = require("../../utils/function");
+const { isLive, calculateAge } = require("../../utils/function");
 const { Survey, SurveyVote, SurveyQuestionOption } = require("./model");
 const mongoose = require("mongoose");
 
@@ -7,7 +7,6 @@ const createSurvey = async (surveyData) => {
   console.log(surveyData);
   const session = await mongoose.startSession();
   session.startTransaction();
-
   try {
     // Create options documents first
     const questionsWithOptions = await Promise.all(
@@ -55,28 +54,63 @@ const createSurvey = async (surveyData) => {
 const updateSurvey = async (surveyId, updateData) => {
   const {
     updatedQuestions,
-    deletedQuestions,
     topic,
     categories,
     thumbnail,
     liveEndedAt,
+    questions,
   } = updateData;
+  const deletedQuestions = JSON.parse(updateData.deletedQuestions);
+  // Find the survey by ID
   const survey = await Survey.findById(surveyId);
   if (!survey) throw new Error("Survey not found");
 
+  // Update survey metadata
   if (topic) survey.topic = topic;
   if (categories) survey.categories = categories;
   if (thumbnail) survey.thumbnail = thumbnail;
   if (liveEndedAt) survey.liveEndedAt = liveEndedAt;
+  // for creating new questions
+  if (questions && questions.length > 0) {
+    for (const questionData of questions) {
+      // Create a new question
+      const newQuestion = {
+        question: questionData.question,
+        options: [], // Initialize options as an empty array
+      };
+
+      // Create and link new options to the question
+      if (questionData.options && questionData.options.length > 0) {
+        for (const optionData of questionData.options) {
+          // Create a new option
+          const newOption = new SurveyQuestionOption({
+            content: optionData.content,
+            color: optionData.color,
+          });
+          await newOption.save(); // Save the new option to the database
+
+          // Link the new option to the question
+          newQuestion.options.push(newOption._id);
+        }
+      }
+
+      // Add the new question to the survey
+      survey.questions.push(newQuestion);
+    }
+  }
+  // Handle updated questions
   if (updatedQuestions && updatedQuestions.length > 0) {
     for (const questionData of updatedQuestions) {
       let question;
+      questionData.updatedOptions = JSON.parse(questionData.updatedOptions);
+      questionData.deletedOptions = JSON.parse(questionData.deletedOptions);
       if (questionData._id) {
         // Update existing question
         question = survey.questions.id(questionData._id);
         if (!question)
           throw new Error(`Question with ID ${questionData._id} not found`);
 
+        // Update question text if provided
         if (questionData.question) {
           question.question = questionData.question;
         }
@@ -88,7 +122,6 @@ const updateSurvey = async (surveyId, updateData) => {
         };
         survey.questions.push(question);
       }
-
       // Handle updated options
       if (
         questionData.updatedOptions &&
@@ -97,13 +130,14 @@ const updateSurvey = async (surveyId, updateData) => {
         for (const option of questionData.updatedOptions) {
           if (option._id) {
             // Update existing option
-            const updatedOption = await SurveyQuestionOption.findByIdAndUpdate(
-              option._id,
-              { content: option.content, color: option.color },
-              { new: true }
+            const existingOption = await SurveyQuestionOption.findById(
+              option._id
             );
-            if (!updatedOption)
+            if (!existingOption)
               throw new Error(`Option with ID ${option._id} not found`);
+            existingOption.content = option.content;
+            existingOption.color = option.color;
+            await existingOption.save();
           } else {
             // Create new option
             const newOption = new SurveyQuestionOption({
@@ -111,20 +145,10 @@ const updateSurvey = async (surveyId, updateData) => {
               color: option.color,
             });
             await newOption.save();
-            question.options.push(newOption._id);
-            const lastQuestion = survey.questions[survey.questions.length - 1];
-            lastQuestion.options.push(newOption._id); // Link the new option to the question
+            question.options.push(newOption._id); // Link the new option to the question
           }
         }
       }
-      survey.questions = survey.questions.map(
-        (q) => {
-          console.log(q._id, question._id);
-          return q;
-        }
-
-        // q._id === question._id  ? question : q
-      );
 
       // Handle deleted options
       if (
@@ -132,13 +156,10 @@ const updateSurvey = async (surveyId, updateData) => {
         questionData.deletedOptions.length > 0
       ) {
         for (const deletedOptionId of questionData.deletedOptions) {
-          const optionToDelete = await SurveyQuestionOption.findByIdAndDelete(
-            deletedOptionId
-          );
-          if (!optionToDelete)
-            throw new Error(`Option with ID ${deletedOptionId} not found`);
+          // Remove the option from the database
+          await SurveyQuestionOption.findByIdAndDelete(deletedOptionId);
 
-          // Remove the deleted option from the question's options array
+          // Remove the option from the question's options array
           question.options = question.options.filter(
             (opt) => !opt.equals(deletedOptionId)
           );
@@ -146,7 +167,6 @@ const updateSurvey = async (surveyId, updateData) => {
       }
     }
   }
-
   // Handle deleted questions
   if (deletedQuestions && deletedQuestions.length > 0) {
     for (const deletedQuestionId of deletedQuestions) {
@@ -167,6 +187,7 @@ const updateSurvey = async (surveyId, updateData) => {
   // Save the updated survey
   await survey.save();
 
+  // Return the updated survey with populated data
   return await Survey.findById(surveyId)
     .populate({
       path: "questions.options",
@@ -407,7 +428,7 @@ const removeQuestionOption = async (surveyId, questionId, optionId) => {
 };
 
 // Voting
- 
+
 const voteSurvey = async (surveyId, votes, userId) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -426,7 +447,9 @@ const voteSurvey = async (surveyId, votes, userId) => {
       if (!question) throw new Error(`Question ${questionId} not found`);
 
       if (!question.options.includes(optionId)) {
-        throw new Error(`Invalid option ${optionId} for question ${questionId}`);
+        throw new Error(
+          `Invalid option ${optionId} for question ${questionId}`
+        );
       }
 
       const existingVote = await SurveyVote.findOne({
@@ -452,7 +475,11 @@ const voteSurvey = async (surveyId, votes, userId) => {
 
     // Increment voted counts for each selected option
     const optionUpdates = votes.map(({ optionId }) =>
-      SurveyQuestionOption.findByIdAndUpdate(optionId, { $inc: { votedCount: 1 } }, { session })
+      SurveyQuestionOption.findByIdAndUpdate(
+        optionId,
+        { $inc: { votedCount: 1 } },
+        { session }
+      )
     );
 
     await Promise.all(optionUpdates);
@@ -468,39 +495,324 @@ const voteSurvey = async (surveyId, votes, userId) => {
 };
 
 const getSurveyResults = async (surveyId) => {
-  const survey = await Survey.findById(surveyId).populate({
-    path: "questions.options",
-    model: "SurveyQuestionOption",
-  });
+  try {
+    // Fetch the survey with populated questions and options
+    const survey = await Survey.findById(surveyId).populate({
+      path: "questions.options",
+      model: "SurveyQuestionOption",
+    });
 
-  if (!survey) throw new Error("Survey not found");
+    if (!survey) {
+      throw new Error("Survey not found");
+    }
 
-  const results = await Promise.all(
-    survey.questions.map(async (question) => {
-      const votes = await SurveyVote.find({
-        survey: surveyId,
-        question: question._id,
-      }).countDocuments();
+    // Initialize an array to hold graph data for each question
+    const graphDataArray = await Promise.all(
+      survey.questions.map(async (question) => {
+        // Get all votes for this question
+        const votes = await SurveyVote.find({
+          survey: surveyId,
+          question: question._id,
+        }).populate("option");
 
-      const optionsWithStats = question.options.map((option) => ({
-        _id: option._id,
-        content: option.content,
-        color: option.color,
-        votes: option.votedCount,
-        percentage:
-          votes > 0 ? ((option.votedCount / votes) * 100).toFixed(2) : 0,
-      }));
+        // Use survey.createdAt as the start date
+        const startDate = new Date(survey.createdAt);
+        const endDate = new Date(survey.liveEndedAt);
 
-      return {
-        _id: question._id,
-        question: question.question,
-        options: optionsWithStats,
-        totalVotes: votes,
+        // Set to the first of each month for consistent comparison
+        startDate.setDate(1);
+        endDate.setDate(endDate.getMonth() + 1, 0);
+
+        // Initialize monthYearVotes object
+        const monthYearVotes = {};
+        // Create entries for each month in the range
+        for (
+          let date = new Date(startDate);
+          date <= endDate;
+          date.setMonth(date.getMonth() + 1)
+        ) {
+          const monthYearKey = `${date.getFullYear()}-${String(
+            date.getMonth() + 1
+          ).padStart(2, "0")}`;
+          monthYearVotes[monthYearKey] = {
+            total: 0,
+            options: question.options.reduce((acc, option) => {
+              acc[option._id.toString()] = {
+                votes: 0,
+                content: option.content,
+                color: option.color,
+              };
+              return acc;
+            }, {}),
+          };
+        }
+
+        // Count votes for each month
+        votes.forEach((vote) => {
+          const voteDate = new Date(vote.createdAt);
+          const monthYearKey = `${voteDate.getFullYear()}-${String(
+            voteDate.getMonth() + 1
+          ).padStart(2, "0")}`;
+
+          if (monthYearVotes[monthYearKey]) {
+            monthYearVotes[monthYearKey].total++;
+            monthYearVotes[monthYearKey].options[vote.option._id.toString()]
+              .votes++;
+          }
+        });
+
+        // Convert monthYearVotes to labels and datasets
+        const labels = Object.keys(monthYearVotes)
+          .sort()
+          .map((key) => {
+            const [year, month] = key.split("-");
+            return new Date(year, month - 1).toLocaleString("default", {
+              month: "short",
+              year: "numeric",
+            });
+          });
+
+        const datasets = question.options.map((option) => {
+          const optionId = option._id.toString();
+          return {
+            label: option.content,
+            data: Object.keys(monthYearVotes)
+              .sort()
+              .map((monthKey) => {
+                const monthData = monthYearVotes[monthKey];
+                const optionVotes = monthData.options[optionId].votes;
+                return monthData.total === 0
+                  ? "0.0"
+                  : ((optionVotes / monthData.total) * 100).toFixed(1);
+              }),
+            borderColor: option.color,
+            backgroundColor: `${option.color}80`,
+            tension: 0.4,
+          };
+        });
+
+        // Calculate total votes for each option across all months
+        const optionTotalVotes = question.options.reduce((acc, option) => {
+          acc[option._id.toString()] = votes.filter(
+            (vote) => vote.option._id.toString() === option._id.toString()
+          ).length;
+          return acc;
+        }, {});
+
+        // Return the graph data for this question
+        return {
+          _id: question._id,
+          labels,
+          datasets,
+          totalVotes: votes.length,
+          topic: question.question,
+          options: question.options.map((option) => {
+            const optionId = option._id.toString();
+            const optionVotes = optionTotalVotes[optionId];
+            return {
+              _id: option._id,
+              content: option.content,
+              color: option.color,
+              totalVotes: optionVotes,
+              percentage:
+                votes.length > 0
+                  ? ((optionVotes / votes.length) * 100).toFixed(1)
+                  : "0.0",
+            };
+          }),
+        };
+      })
+    );
+
+    return graphDataArray;
+  } catch (error) {
+    throw new Error(`Error fetching survey graph data: ${error.message}`);
+  }
+};
+const getQuestionResults = async (surveyId, questionId, filters) => {
+  try {
+    // Fetch the survey with the specific question and its options
+    const survey = await Survey.findById(surveyId).populate({
+      path: "questions",
+      match: { _id: questionId },
+      populate: { path: "options", model: "SurveyQuestionOption" },
+    });
+
+    if (!survey || !survey.questions.length) {
+      throw new Error("Survey or question not found");
+    }
+
+    const question = survey.questions.find(item => item._id.toString() === questionId);
+    const ageRange = filters.age ? filters.age.split("-").map(Number) : null;
+    const gender = filters.gender === "null" ? null : filters.gender ?? null;
+    // Prepare the filter query
+    let filterQuery = { survey: surveyId, question: questionId };
+    
+    // Get all votes for this question with applied filters
+    let votes = await SurveyVote.find(filterQuery).populate("option").populate('user');
+    votes = votes?.filter((vote) => {
+      const user = vote.user;
+      if (!user) return false;
+      // Filter by gender
+      if (gender && user.gender !== gender) return false;
+      
+      // Filter by age
+      if (ageRange) {
+        const userAge = calculateAge(user.dob);
+        if (userAge < ageRange[0] || userAge > ageRange[1]) return false;
+      }
+      
+      return true;
+    });
+    // Determine the date range based on monthDuration
+    let startDate, endDate;
+    if (filters.monthDuration) {
+      // If monthDuration is provided, calculate the start date relative to liveEndedAt
+      endDate = new Date(survey.liveEndedAt);
+      startDate = new Date(endDate);
+      startDate.setMonth(startDate.getMonth() - filters.monthDuration + 1);
+    } else {
+      // If no monthDuration, use the entire range from survey.createdAt to liveEndedAt
+      startDate = new Date(survey.createdAt);
+      endDate = new Date(survey.liveEndedAt);
+    }
+
+    // Set to the first of each month for consistent comparison
+    startDate.setDate(1);
+    endDate.setDate(endDate.getMonth() + 1, 0); //set the last date
+
+    // Initialize monthYearVotes object
+    const monthYearVotes = {};
+
+    // Create entries for each month in the range
+    for (
+      let date = new Date(startDate);
+      date <= endDate;
+      date.setMonth(date.getMonth() + 1)
+    ) {
+      const monthYearKey = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}`;
+      monthYearVotes[monthYearKey] = {
+        total: 0,
+        options: question.options.reduce((acc, option) => {
+          acc[option._id.toString()] = {
+            votes: 0,
+            content: option.content,
+            color: option.color,
+          };
+          return acc;
+        }, {}),
       };
-    })
-  );
+    }
+    // Count votes for each month
+    votes.forEach((vote) => {
+      const voteDate = new Date(vote.createdAt);
+      if (voteDate >= startDate && voteDate <= endDate) {
+        const monthYearKey = `${voteDate.getFullYear()}-${String(voteDate.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (monthYearVotes[monthYearKey]) {
+          monthYearVotes[monthYearKey].total++;
+          console.log(monthYearVotes[monthYearKey].options[vote.option._id.toString()])
+          if(monthYearVotes[monthYearKey].options[vote.option._id.toString()]){
 
-  return results;
+            monthYearVotes[monthYearKey].options[vote.option._id.toString()].votes++;
+          }
+        }
+      }
+    });
+
+    // Add previous month if only one month exists
+    if (Object.keys(monthYearVotes).length === 1) {
+      const currentKey = Object.keys(monthYearVotes)[0];
+      const [year, month] = currentKey.split("-").map(Number);
+
+      let prevYear = year;
+      let prevMonth = month - 1;
+
+      if (prevMonth === 0) {
+        prevMonth = 12;
+        prevYear--;
+      }
+
+      const prevMonthKey = `${prevYear}-${String(prevMonth).padStart(2, "0")}`;
+
+      monthYearVotes[prevMonthKey] = {
+        total: 0,
+        options: question.options.reduce((acc, option) => {
+          acc[option._id.toString()] = {
+            votes: 0,
+            content: option.content,
+            color: option.color,
+          };
+          return acc;
+        }, {}),
+      };
+    }
+
+    // Convert monthYearVotes to labels and datasets
+    const labels = Object.keys(monthYearVotes)
+      .sort()
+      .map((key) => {
+        const [year, month] = key.split("-");
+        return new Date(year, month - 1).toLocaleString("default", {
+          month: "short",
+          year: "numeric",
+        });
+      });
+
+    const datasets = question.options.map((option) => {
+      const optionId = option._id.toString();
+      return {
+        label: option.content,
+        data: Object.keys(monthYearVotes)
+          .sort()
+          .map((monthKey) => {
+            const monthData = monthYearVotes[monthKey];
+            const optionVotes = monthData.options[optionId].votes;
+            return monthData.total === 0
+              ? "0.0"
+              : ((optionVotes / monthData.total) * 100).toFixed(1);
+          }),
+        borderColor: option.color,
+        backgroundColor: `${option.color}80`,
+        tension: 0.4,
+      };
+    });
+
+    // Calculate total votes for each option
+    const optionTotalVotes = question.options.reduce((acc, option) => {
+      acc[option._id.toString()] = votes.filter(
+        (vote) => vote.option._id.toString() === option._id.toString()
+      ).length;
+      return acc;
+    }, {});
+
+    // Return the graph data for this question
+    return {
+      _id: question._id,
+      labels,
+      datasets,
+      totalVotes: votes.length,
+      topic: question.question,
+      options: question.options.map((option) => {
+        const optionId = option._id.toString();
+        const optionVotes = optionTotalVotes[optionId];
+        return {
+          _id: option._id,
+          content: option.content,
+          color: option.color,
+          totalVotes: optionVotes,
+          percentage:
+            votes.length > 0
+              ? ((optionVotes / votes.length) * 100).toFixed(1)
+              : "0.0",
+        };
+      }),
+    };
+  } catch (error) {
+    throw new Error(`Error fetching survey graph data: ${error.message}`);
+  }
 };
 const checkVote = async (surveyId, userId) => {
   try {
@@ -549,6 +861,7 @@ module.exports = {
   removeQuestionOption,
   voteSurvey,
   getSurveyResults,
+  getQuestionResults,
   updateSurvey,
   deleteSurvey,
   checkVote,

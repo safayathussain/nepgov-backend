@@ -123,7 +123,7 @@ const checkVote = async (id, userId) => {
   });
   return trackerVote;
 };
-const trackerResult = async (trackerId, query, userId) => {
+const trackerResult = async (trackerId, query) => {
   try {
     // Parse query parameters
     const ageRange = query.age ? query.age.split('-').map(Number) : null;
@@ -300,7 +300,7 @@ const trackerResult = async (trackerId, query, userId) => {
     return {
       labels,
       datasets,
-      monthlyData: monthYearVotes,
+      // monthlyData: monthYearVotes,
       totalVotes: votes.length,
       topic: tracker.topic,
       options: tracker.options.map(option => {

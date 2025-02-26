@@ -44,10 +44,10 @@ const updateHomePage = async (homePageData) => {
         homePageData.liveSurveyTracker.map(async (item) => {
           if (item?.type === "Survey") {
             const survey = await Survey.findById(item.data);
-            return isLive(survey.liveEndedAt);
+            return isLive(survey?.liveEndedAt);
           } else {
             const tracker = await Tracker.findById(item.data);
-            return isLive(tracker.liveEndedAt);
+            return isLive(tracker?.liveEndedAt);
           }
         })
       );
