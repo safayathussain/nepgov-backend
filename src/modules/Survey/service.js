@@ -4,7 +4,6 @@ const mongoose = require("mongoose");
 
 // Survey CRUD
 const createSurvey = async (surveyData) => {
-  console.log(surveyData);
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
@@ -642,26 +641,33 @@ const getQuestionResults = async (surveyId, questionId, filters) => {
       throw new Error("Survey or question not found");
     }
 
-    const question = survey.questions.find(item => item._id.toString() === questionId);
+    const question = survey.questions.find(
+      (item) => item._id.toString() === questionId
+    );
     const ageRange = filters.age ? filters.age.split("-").map(Number) : null;
     const gender = filters.gender === "null" ? null : filters.gender ?? null;
+    const city = filters.city || null;
+    const country = filters.country || null;
+    const state_province = filters.state_province || null;
     // Prepare the filter query
     let filterQuery = { survey: surveyId, question: questionId };
-    
+
     // Get all votes for this question with applied filters
-    let votes = await SurveyVote.find(filterQuery).populate("option").populate('user');
+    let votes = await SurveyVote.find(filterQuery)
+      .populate("option")
+      .populate("user");
     votes = votes?.filter((vote) => {
       const user = vote.user;
       if (!user) return false;
-      // Filter by gender
       if (gender && user.gender !== gender) return false;
-      
-      // Filter by age
       if (ageRange) {
         const userAge = calculateAge(user.dob);
         if (userAge < ageRange[0] || userAge > ageRange[1]) return false;
       }
-      
+      if (country && user.country !== country) return false;
+      if (city && user.city !== city) return false;
+      if (state_province && user.state_province !== state_province)
+        return false;
       return true;
     });
     // Determine the date range based on monthDuration
@@ -679,7 +685,7 @@ const getQuestionResults = async (surveyId, questionId, filters) => {
 
     // Set to the first of each month for consistent comparison
     startDate.setDate(1);
-    endDate.setDate(endDate.getMonth() + 1, 0); //set the last date
+    endDate.setDate(endDate.getMonth() + 1, 0);
 
     // Initialize monthYearVotes object
     const monthYearVotes = {};
@@ -709,14 +715,20 @@ const getQuestionResults = async (surveyId, questionId, filters) => {
     votes.forEach((vote) => {
       const voteDate = new Date(vote.createdAt);
       if (voteDate >= startDate && voteDate <= endDate) {
-        const monthYearKey = `${voteDate.getFullYear()}-${String(voteDate.getMonth() + 1).padStart(2, '0')}`;
-        
+        const monthYearKey = `${voteDate.getFullYear()}-${String(
+          voteDate.getMonth() + 1
+        ).padStart(2, "0")}`;
+
         if (monthYearVotes[monthYearKey]) {
           monthYearVotes[monthYearKey].total++;
-          console.log(monthYearVotes[monthYearKey].options[vote.option._id.toString()])
-          if(monthYearVotes[monthYearKey].options[vote.option._id.toString()]){
-
-            monthYearVotes[monthYearKey].options[vote.option._id.toString()].votes++;
+          console.log(
+            monthYearVotes[monthYearKey].options[vote.option._id.toString()]
+          );
+          if (
+            monthYearVotes[monthYearKey].options[vote.option._id.toString()]
+          ) {
+            monthYearVotes[monthYearKey].options[vote.option._id.toString()]
+              .votes++;
           }
         }
       }

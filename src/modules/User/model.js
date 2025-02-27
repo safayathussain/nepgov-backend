@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
     street: { type: String, default: "" },
     city: { type: String, default: "" },
     state_province: { type: String, default: "" },
+    country: {type: String, default: ""},
     profilePicture: { type: String, default: null },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true, select: false },
