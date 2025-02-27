@@ -9,7 +9,10 @@ const authMiddleware = async (req, res, next) => {
     if (!token && !refreshToken) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-
+    const domain = req.hostname.includes("localhost")
+    ? "localhost"
+    : `.${req.hostname.split('.').slice(-2).join('.')}`;
+    req.domain = domain
     // Handle refresh token scenario
     if (!token && refreshToken && cookieConsent === "accepted") {
       try {
@@ -27,6 +30,7 @@ const authMiddleware = async (req, res, next) => {
         res.cookie("accessToken", newAccessToken, {
           httpOnly: true,
           secure: true,
+          domain,
           sameSite: "None",
           maxAge: 60 * 60 * 1000, // 1 hour
         });

@@ -49,7 +49,8 @@ const adminSignIn = async (req, res) => {
     const result = await authService.adminSignIn(
       req.body.email,
       req.body.password,
-      res
+      res,
+      req
     );
     sendResponse(res, { message: result.message, data: result.data });
   } catch (error) {
@@ -185,11 +186,11 @@ const refreshToken = async (req, res) => {
           { expiresIn: "1h" }
         );
         res.cookie("accessToken", newAccessToken, {
+          domain: req.domain,
           httpOnly: true,
           secure: true,
           sameSite: "None",
-          // maxAge: 60 * 60 * 1000, // 1 hour
-          maxAge: 2000, // 1 hour
+          maxAge: 60 * 60 * 1000, // 1 hour
         });
 
         return res.json({ accessToken: newAccessToken });

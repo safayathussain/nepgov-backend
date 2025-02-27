@@ -19,7 +19,7 @@ const registerUser = async (userData, role = "user", res) => {
     ...userData,
     password: hashedPassword,
     role,
-    ...(role === "admin" && { isVerified: true })
+    ...(role === "admin" && { isVerified: true }),
   });
   await redisClient.set(`otp:${email}`, otp, {
     EX: 300,
@@ -29,7 +29,6 @@ const registerUser = async (userData, role = "user", res) => {
   return { data: newUser };
 };
 const signIn = async (email, password, res, req) => {
-
   const user = await User.findOne({ email }).select("+password");
   if (!user) throw new Error("User not found");
   const isMatch = await bcrypt.compare(password, user.password);
@@ -43,6 +42,7 @@ const signIn = async (email, password, res, req) => {
         httpOnly: true,
         secure: true,
         sameSite: "None",
+        domain: req.domain,
         maxAge: 60 * 60 * 1000, // 1 hour
       });
 
@@ -50,6 +50,7 @@ const signIn = async (email, password, res, req) => {
         httpOnly: true,
         secure: true,
         sameSite: "None",
+        domain: req.domain,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
     }
@@ -66,7 +67,7 @@ const signIn = async (email, password, res, req) => {
     },
   };
 };
-const adminSignIn = async (email, password, res) => {
+const adminSignIn = async (email, password, res, req) => {
   const user = await User.findOne({ email, role: "admin" }).select("+password");
   if (!user) throw new Error("User not found");
   const isMatch = await bcrypt.compare(password, user.password);
@@ -78,6 +79,8 @@ const adminSignIn = async (email, password, res) => {
     httpOnly: true,
     secure: true,
     sameSite: "None",
+    domain: req.domain,
+
     maxAge: 60 * 60 * 1000, // 1 hour
   });
 
@@ -85,6 +88,7 @@ const adminSignIn = async (email, password, res) => {
     httpOnly: true,
     secure: true,
     sameSite: "None",
+    domain: req.domain,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
   return {
@@ -123,12 +127,14 @@ const verifyOtp = async (email, otp, res, req) => {
       httpOnly: true,
       secure: true,
       sameSite: "None",
+      domain: req.domain,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: "None",
+      domain: req.domain,
       maxAge: 60 * 60 * 1000, //1h
     });
   }
@@ -161,12 +167,14 @@ const resetPassword = async (email, newPassword, otp, res, req) => {
     res.cookie("refreshToken", accessToken, {
       httpOnly: true,
       secure: true,
+      domain: req.domain,
       sameSite: "None",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
+      domain: req.domain,
       sameSite: "None",
       maxAge: 60 * 60 * 1000, //1h
     });
