@@ -189,7 +189,7 @@ const refreshToken = async (req, res) => {
           domain: req.domain,
           httpOnly: true,
           secure: true,
-          sameSite: "None",
+          sameSite: "Strict",
           maxAge: 60 * 60 * 1000, // 1 hour
         });
 
@@ -206,12 +206,12 @@ const logout = (req, res) => {
   res.clearCookie("accessToken", {
     httpOnly: true,
     secure: true,
-    sameSite: "None",
+    sameSite: "Strict",
   });
   res.clearCookie("refreshToken", {
     httpOnly: true,
     secure: true,
-    sameSite: "None",
+    sameSite: "Strict",
   });
   sendResponse(res, { message: "logout successfully" });
 };
