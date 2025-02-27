@@ -20,16 +20,19 @@ const getHomePage = async () => {
       path: "liveSurveyTracker.data",
       populate: { path: "categories" },
     });
-  for (let item of homePage?.liveSurveyTracker) {
-    if (item.data) {
-      if (item.type === "Survey") {
-        await item.data.populate("questions.options");
-      } else if (item.type === "Tracker") {
-        await item.data.populate("options");
+  if (homePage) {
+    for (let item of homePage?.liveSurveyTracker) {
+      if (item.data) {
+        if (item.type === "Survey") {
+          await item.data.populate("questions.options");
+        } else if (item.type === "Tracker") {
+          await item.data.populate("options");
+        }
       }
     }
+    return homePage;
   }
-  return homePage;
+  return {};
 };
 
 const updateHomePage = async (homePageData) => {
@@ -51,7 +54,7 @@ const updateHomePage = async (homePageData) => {
           }
         })
       );
-      
+
       // Then filter the original array using the results
       homePageData.liveSurveyTracker = homePageData?.liveSurveyTracker.filter(
         (_, index) => filterResults[index]
