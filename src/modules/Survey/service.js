@@ -7,23 +7,22 @@ const createSurvey = async (surveyData) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    // Create options documents first
-    const questionsWithOptions = await Promise.all(
-      surveyData.questions.map(async (questionData) => {
-        const options = await SurveyQuestionOption.insertMany(
-          questionData.options.map((opt) => ({
-            content: opt.content,
-            color: opt.color,
-          })),
-          { session }
-        );
+    // Process questions sequentially instead of in parallel
+    const questionsWithOptions = [];
+    for (const questionData of surveyData.questions) {
+      const options = await SurveyQuestionOption.insertMany(
+        questionData.options.map((opt) => ({
+          content: opt.content,
+          color: opt.color,
+        })),
+        { session }
+      );
 
-        return {
-          question: questionData.question,
-          options: options.map((opt) => opt._id),
-        };
-      })
-    );
+      questionsWithOptions.push({
+        question: questionData.question,
+        options: options.map((opt) => opt._id),
+      });
+    }
 
     // Create the survey document
     const [survey] = await Survey.create(
