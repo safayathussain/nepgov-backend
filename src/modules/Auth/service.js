@@ -80,7 +80,6 @@ const adminSignIn = async (email, password, res, req) => {
     secure: true,
     sameSite: "None",
     domain: req.domain,
-
     maxAge: 60 * 60 * 1000, // 1 hour
   });
 

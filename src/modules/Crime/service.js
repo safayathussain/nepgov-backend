@@ -11,7 +11,6 @@ const getAllCrimes = async () => {
 
 const getCrimeById = async (id) => {
   const crime = await Crime.findById(id).populate(["user"]);
-
   if (!crime) throw new Error("Crime report not found");
   return crime;
 };
