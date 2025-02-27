@@ -53,7 +53,7 @@ const updateHomePage = async (homePageData) => {
       );
       
       // Then filter the original array using the results
-      homePageData?.liveSurveyTracker = homePageData?.liveSurveyTracker.filter(
+      homePageData.liveSurveyTracker = homePageData?.liveSurveyTracker.filter(
         (_, index) => filterResults[index]
       );
     }
