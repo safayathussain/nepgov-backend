@@ -41,7 +41,7 @@ const signIn = async (email, password, res, req) => {
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "Strict",
+        sameSite: "None",
         domain: req.domain,
         maxAge: 60 * 60 * 1000, // 1 hour
       });
@@ -49,7 +49,7 @@ const signIn = async (email, password, res, req) => {
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "Strict",
+        sameSite: "None",
         domain: req.domain,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
@@ -78,7 +78,7 @@ const adminSignIn = async (email, password, res, req) => {
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
     secure: true,
-    sameSite: "Strict",
+    sameSite: "None",
     domain: req.domain,
 
     maxAge: 60 * 60 * 1000, // 1 hour
@@ -87,7 +87,7 @@ const adminSignIn = async (email, password, res, req) => {
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: true,
-    sameSite: "Strict",
+    sameSite: "None",
     domain: req.domain,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
@@ -126,14 +126,14 @@ const verifyOtp = async (email, otp, res, req) => {
     res.cookie("refreshToken", accessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "Strict",
+      sameSite: "None",
       domain: req.domain,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "Strict",
+      sameSite: "None",
       domain: req.domain,
       maxAge: 60 * 60 * 1000, //1h
     });
@@ -168,14 +168,14 @@ const resetPassword = async (email, newPassword, otp, res, req) => {
       httpOnly: true,
       secure: true,
       domain: req.domain,
-      sameSite: "Strict",
+      sameSite: "None",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: true,
       domain: req.domain,
-      sameSite: "Strict",
+      sameSite: "None",
       maxAge: 60 * 60 * 1000, //1h
     });
   }

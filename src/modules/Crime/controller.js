@@ -36,7 +36,8 @@ const getAllCrimes = async (req, res) => {
     const crimes = await crimeService.getAllCrimes();
     sendResponse(res, {
       message: "Crime reports retrieved successfully",
-      data: crimes,
+      // data: crimes,
+      data: req.domain
     });
   } catch (error) {
     sendResponse(res, {

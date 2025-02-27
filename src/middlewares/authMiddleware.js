@@ -31,7 +31,7 @@ const authMiddleware = async (req, res, next) => {
           httpOnly: true,
           secure: true,
           domain,
-          sameSite: "Strict",
+          sameSite: "None",
           maxAge: 60 * 60 * 1000, // 1 hour
         });
         token = newAccessToken;
