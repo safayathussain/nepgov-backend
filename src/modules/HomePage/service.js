@@ -20,7 +20,7 @@ const getHomePage = async () => {
       path: "liveSurveyTracker.data",
       populate: { path: "categories" },
     });
-  for (let item of homePage.liveSurveyTracker) {
+  for (let item of homePage?.liveSurveyTracker) {
     if (item.data) {
       if (item.type === "Survey") {
         await item.data.populate("questions.options");
@@ -38,10 +38,10 @@ const updateHomePage = async (homePageData) => {
   if (!homePage) {
     homePage = await HomePage.create(homePageData);
   } else {
-    if (homePageData.liveSurveyTracker) {
+    if (homePageData?.liveSurveyTracker) {
       // First map to create array of Promises that resolve to boolean values
       const filterResults = await Promise.all(
-        homePageData.liveSurveyTracker.map(async (item) => {
+        homePageData?.liveSurveyTracker.map(async (item) => {
           if (item?.type === "Survey") {
             const survey = await Survey.findById(item.data);
             return isLive(survey?.liveEndedAt);
@@ -53,7 +53,7 @@ const updateHomePage = async (homePageData) => {
       );
       
       // Then filter the original array using the results
-      homePageData.liveSurveyTracker = homePageData.liveSurveyTracker.filter(
+      homePageData?.liveSurveyTracker = homePageData?.liveSurveyTracker.filter(
         (_, index) => filterResults[index]
       );
     }
