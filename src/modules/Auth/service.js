@@ -42,7 +42,6 @@ const signIn = async (email, password, res, req) => {
         httpOnly: true,
         secure: true,
         sameSite: "None",
-        domain: req.domain,
         maxAge: 60 * 60 * 1000, // 1 hour
       });
 
@@ -50,7 +49,6 @@ const signIn = async (email, password, res, req) => {
         httpOnly: true,
         secure: true,
         sameSite: "None",
-        domain: req.domain,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
     }
@@ -75,19 +73,17 @@ const adminSignIn = async (email, password, res, req) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
   // Set cookies for access & refresh tokens
-  res.cookie("accessToken", accessToken, {
+  res.cookie("adminAccessToken", accessToken, {
     httpOnly: true,
     secure: true,
     sameSite: "None",
-    domain: req.domain,
     maxAge: 60 * 60 * 1000, // 1 hour
   });
 
-  res.cookie("refreshToken", refreshToken, {
+  res.cookie("adminRefreshToken", refreshToken, {
     httpOnly: true,
     secure: true,
     sameSite: "None",
-    domain: req.domain,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
   return {
@@ -126,14 +122,12 @@ const verifyOtp = async (email, otp, res, req) => {
       httpOnly: true,
       secure: true,
       sameSite: "None",
-      domain: req.domain,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: "None",
-      domain: req.domain,
       maxAge: 60 * 60 * 1000, //1h
     });
   }
@@ -166,14 +160,12 @@ const resetPassword = async (email, newPassword, otp, res, req) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
-      domain: req.domain,
       sameSite: "None",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: true,
-      domain: req.domain,
       sameSite: "None",
       maxAge: 60 * 60 * 1000, //1h
     });

@@ -186,7 +186,6 @@ const refreshToken = async (req, res) => {
           { expiresIn: "1h" }
         );
         res.cookie("accessToken", newAccessToken, {
-          domain: req.domain,
           httpOnly: true,
           secure: true,
           sameSite: "None",
