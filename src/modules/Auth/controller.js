@@ -214,6 +214,19 @@ const logout = (req, res) => {
   });
   sendResponse(res, { message: "logout successfully" });
 };
+const adminlogout = (req, res) => {
+  res.clearCookie("adminAccessToken", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+  });
+  res.clearCookie("adminRefreshToken", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+  });
+  sendResponse(res, { message: "logout successfully" });
+};
 
 const updateProfile = async (req, res) => {
   try {
@@ -242,6 +255,7 @@ module.exports = {
   resetPassword,
   refreshToken,
   logout,
+  adminlogout,
   updateProfile,
   signIn,
   verifyOtpForPass,

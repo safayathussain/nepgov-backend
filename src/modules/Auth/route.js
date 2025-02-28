@@ -12,6 +12,7 @@ const {
   verifyOtpForPass,
   changePassword,
   adminSignIn,
+  adminlogout,
 } = require("./controller");
 const { registerValidation } = require("./validation");
 const authMiddleware = require("../../middlewares/authMiddleware");
@@ -30,6 +31,7 @@ router.post("/reset-password", resetPassword);
 router.post("/change-password/:id", changePassword);
 router.post("/refresh-token", refreshToken);
 router.post("/logout", logout);
+router.post("/admin-logout", adminlogout);
 router.put(
   "/update-profile/:id",
   authMiddleware,
