@@ -3,26 +3,77 @@ const { Survey, SurveyVote, SurveyQuestionOption } = require("./model");
 const mongoose = require("mongoose");
 
 // Survey CRUD
+// const createSurvey = async (surveyData) => {
+//   const session = await mongoose.startSession();
+//   session.startTransaction();
+//   try {
+//     // Process questions sequentially instead of in parallel
+//     const questionsWithOptions = [];
+//     for (const questionData of surveyData.questions) {
+//       const options = await SurveyQuestionOption.insertMany(
+//         questionData.options.map((opt) => ({
+//           content: opt.content,
+//           color: opt.color,
+//         })),
+//         { session }
+//       );
+
+//       questionsWithOptions.push({
+//         question: questionData.question,
+//         options: options.map((opt) => opt._id),
+//       });
+//     }
+
+//     // Create the survey document
+//     const [survey] = await Survey.create(
+//       [
+//         {
+//           ...surveyData,
+//           questions: questionsWithOptions,
+//         },
+//       ],
+//       { session }
+//     );
+
+//     await session.commitTransaction();
+
+//     // Fetch and populate the created survey
+//     return await Survey.findById(survey._id).populate({
+//       path: "questions.options",
+//       model: "SurveyQuestionOption",
+//     });
+//   } catch (error) {
+//     await session.abortTransaction();
+//     throw error;
+//   } finally {
+//     session.endSession();
+//   }
+// };
+
+
 const createSurvey = async (surveyData) => {
+  console.log(surveyData);
   const session = await mongoose.startSession();
   session.startTransaction();
-  try {
-    // Process questions sequentially instead of in parallel
-    const questionsWithOptions = [];
-    for (const questionData of surveyData.questions) {
-      const options = await SurveyQuestionOption.insertMany(
-        questionData.options.map((opt) => ({
-          content: opt.content,
-          color: opt.color,
-        })),
-        { session }
-      );
 
-      questionsWithOptions.push({
-        question: questionData.question,
-        options: options.map((opt) => opt._id),
-      });
-    }
+  try {
+    // Create options documents first
+    const questionsWithOptions = await Promise.all(
+      surveyData.questions.map(async (questionData) => {
+        const options = await SurveyQuestionOption.insertMany(
+          questionData.options.map((opt) => ({
+            content: opt.content,
+            color: opt.color,
+          })),
+          { session }
+        );
+
+        return {
+          question: questionData.question,
+          options: options.map((opt) => opt._id),
+        };
+      })
+    );
 
     // Create the survey document
     const [survey] = await Survey.create(
