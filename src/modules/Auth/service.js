@@ -88,7 +88,7 @@ const adminSignIn = async (email, password, res, req) => {
     message: "Sign-in successful",
     data: {
       user,
-      ...(user.isVerified ? { accessToken } : {}),
+      ...(user.isVerified ? { ...accessToken } : {}),
     },
   };
 };
