@@ -87,8 +87,10 @@ const adminSignIn = async (email, password, res, req) => {
   return {
     message: "Sign-in successful",
     data: {
-      user,
-      accessToken
+      user: {
+        ...user.toObject(),
+        accessToken
+      },
     },
   };
 };
