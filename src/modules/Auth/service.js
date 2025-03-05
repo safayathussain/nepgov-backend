@@ -58,10 +58,7 @@ const signIn = async (email, password, res, req) => {
     data: {
       user: {
         ...user.toObject(),
-        accessToken
-        // ...(user.isVerified && req.cookieConsent !== "accepted"
-        //   ? { accessToken }
-        //   : {}),
+        accessToken 
       },
     },
   };
