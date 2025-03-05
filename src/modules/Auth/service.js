@@ -41,14 +41,14 @@ const signIn = async (email, password, res, req) => {
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "None",
+        sameSite: "lax",
         maxAge: 60 * 60 * 1000, // 1 hour
       });
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "None",
+        sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
     }
@@ -76,14 +76,14 @@ const adminSignIn = async (email, password, res, req) => {
   res.cookie("adminAccessToken", accessToken, {
     httpOnly: true,
     secure: true,
-    sameSite: "None",
+    sameSite: "lax",
     maxAge: 60 * 60 * 1000, // 1 hour
   });
 
   res.cookie("adminRefreshToken", refreshToken, {
     httpOnly: true,
     secure: true,
-    sameSite: "None",
+    sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
   return {
@@ -121,13 +121,13 @@ const verifyOtp = async (email, otp, res, req) => {
     res.cookie("refreshToken", accessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "None",
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "None",
+      sameSite: "lax",
       maxAge: 60 * 60 * 1000, //1h
     });
   }
@@ -160,13 +160,13 @@ const resetPassword = async (email, newPassword, otp, res, req) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "None",
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "None",
+      sameSite: "lax",
       maxAge: 60 * 60 * 1000, //1h
     });
   }

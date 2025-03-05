@@ -15,7 +15,6 @@ const authMiddleware = async (req, res, next) => {
         refresh: req.cookies.adminRefreshToken
       }
     };
-    
     // Check if any token exists
     if (!tokens.user.access && !tokens.user.refresh && 
         !tokens.admin.access && !tokens.admin.refresh) {
@@ -96,7 +95,7 @@ async function refreshAccessToken(refreshToken, res, cookieName) {
     res.cookie(cookieName, newAccessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "None",
+      sameSite: "lax",
       maxAge: 60 * 60 * 1000, // 1 hour
     });
     
