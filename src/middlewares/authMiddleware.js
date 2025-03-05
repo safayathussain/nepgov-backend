@@ -95,7 +95,7 @@ async function refreshAccessToken(refreshToken, res, cookieName) {
     res.cookie(cookieName, newAccessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: "lax",
+      sameSite: "none",
       maxAge: 60 * 60 * 1000, // 1 hour
     });
     
