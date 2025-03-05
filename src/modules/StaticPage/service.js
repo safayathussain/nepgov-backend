@@ -14,19 +14,19 @@ const getAllStaticPages = async () => {
 
 const getStaticPageById = async (id) => {
   const page = await StaticPage.findById(id);
-  if (!page) throw new Error("Static page not found");
+  if (!page) throw new Error("Page not found");
   return page;
 };
 
 const getStaticPageByType = async (pageType) => {
   const page = await StaticPage.findOne({ page: pageType });
-  if (!page) throw new Error("Static page not found");
+  if (!page) throw new Error("Page not found");
   return page;
 };
 
 const updateStaticPage = async (id, updateData) => {
   const page = await StaticPage.findById(id);
-  if (!page) throw new Error("Static page not found");
+  if (!page) throw new Error("Page not found");
 
   if (updateData.page && updateData.page !== page.page) {
     const existingPage = await StaticPage.findOne({ page: updateData.page });
@@ -43,7 +43,7 @@ const updateStaticPage = async (id, updateData) => {
 
 const deleteStaticPage = async (id) => {
   const page = await StaticPage.findById(id);
-  if (!page) throw new Error("Static page not found");
+  if (!page) throw new Error("Page not found");
   
   await StaticPage.findByIdAndDelete(id);
   return true;

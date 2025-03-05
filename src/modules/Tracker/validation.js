@@ -6,6 +6,10 @@ const createTrackerValidation = [
     .optional()
     .isISO8601()
     .withMessage("Live ended at must be a valid date"),
+  body("liveStartedAt")
+    .optional()
+    .isISO8601()
+    .withMessage("Live ended at must be a valid date"),
   body("options")
     .isArray({ min: 2 })
     .withMessage("At least 2 options required"),
@@ -36,12 +40,12 @@ const voteValidation = [
 ];
 const addOptionValidation = [
   body("content").notEmpty().withMessage("Option content is required"),
-  body("color").notEmpty().withMessage("Option color is required")
+  body("color").notEmpty().withMessage("Option color is required"),
 ];
 
 module.exports = {
   voteValidation,
   updateTrackerValidation,
   createTrackerValidation,
-  addOptionValidation
+  addOptionValidation,
 };

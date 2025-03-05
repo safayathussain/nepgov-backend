@@ -11,9 +11,13 @@ const generateOTP = () => {
 
 // **Generate Access Token (expires in 1 hour)**
 const generateAccessToken = (user) => {
-  return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_ACCESS_SECRET, {
-    expiresIn: "1h",
-  });
+  return jwt.sign(
+    { id: user._id, role: user.role },
+    process.env.JWT_ACCESS_SECRET,
+    {
+      expiresIn: "1h",
+    }
+  );
 };
 
 // **Generate Refresh Token (expires in 7 days)**
@@ -31,17 +35,21 @@ function calculateAge(dob) {
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
     age--;
   }
   return age;
 }
 
-
- const isLive = (dateString) => {
+const isLive = (start, end) => {
   const currentDate = new Date();
-  const givenDate = new Date(dateString);
-  return givenDate > currentDate;
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  return currentDate >= startDate && currentDate <= endDate;
 };
 module.exports = {
   generateToken,
@@ -49,5 +57,5 @@ module.exports = {
   generateAccessToken,
   generateRefreshToken,
   calculateAge,
-  isLive
+  isLive,
 };

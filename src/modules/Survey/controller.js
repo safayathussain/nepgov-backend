@@ -24,7 +24,7 @@ const createSurvey = async (req, res) => {
       ...req.body,
       questions: req.body?.questions,
       thumbnail: req.file ? `/uploads/${req.file.filename}` : null,
-      user: req.user,
+      user: req.adminUser,
     });
 
     sendResponse(res, {
@@ -103,7 +103,7 @@ const updateSurvey = async (req, res) => {
         ...req.body,
         ...(req.file && { thumbnail: `/uploads/${req.file.filename}` }),
       },
-      req.user
+      req.adminUser
     );
 
     sendResponse(res, {
@@ -128,7 +128,7 @@ const updateSurvey = async (req, res) => {
 
 const deleteSurvey = async (req, res) => {
   try {
-    await surveyService.deleteSurvey(req.params.id, req.user);
+    await surveyService.deleteSurvey(req.params.id, req.adminUser);
     sendResponse(res, {
       message: "Survey deleted successfully",
     });

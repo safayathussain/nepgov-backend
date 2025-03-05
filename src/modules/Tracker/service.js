@@ -1,4 +1,4 @@
-const { calculateAge } = require("../../utils/function");
+const { calculateAge, isLive } = require("../../utils/function");
 const { Tracker } = require("./model");
 const { TrackerVote, TrackerOption } = require("./model");
 const mongoose = require("mongoose");
@@ -189,7 +189,7 @@ const trackerResult = async (trackerId, query) => {
       startDate.setMonth(startDate.getMonth() + 1 - monthDuration, 1);
       // startDate.setDate(1); // Ensure it's the first day
     } else {
-      startDate = new Date(tracker.createdAt);
+      startDate = new Date(tracker.liveStartedAt);
       endDate = new Date(tracker.liveEndedAt);
     }
 
@@ -406,6 +406,10 @@ const voteTracker = async (trackerId, optionId, userId) => {
   });
   if (existingVote) {
     throw new Error("User has already voted");
+  }
+  const isLive = isLive(tracker.liveStartedAt, tracker.liveEndedAt);
+  if(!isLive){
+    throw new Error("The tracker is no longer live")
   }
   await TrackerVote.create({
     tracker: trackerId,

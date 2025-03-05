@@ -15,7 +15,7 @@ const createTracker = async (req, res) => {
 
     const result = await trackerService.createTracker({
       ...req.body,
-      user: req.user
+      user: req.adminUser
     });
     
     sendResponse(res, {
@@ -168,7 +168,7 @@ const addOption = async (req, res) => {
       });
     }
 
-  const result =  await trackerService.addOption(req.params.id, req.body, req.user);
+  const result =  await trackerService.addOption(req.params.id, req.body, req.adminUser);
     sendResponse(res, {
       message: "Option added successfully",
       data: result

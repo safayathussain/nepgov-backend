@@ -19,6 +19,10 @@ const trackerSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
+  liveStartedAt: {
+    type: Date,
+    required: true
+  },
   categories: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category"

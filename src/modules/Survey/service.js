@@ -2,57 +2,8 @@ const { isLive, calculateAge } = require("../../utils/function");
 const { Survey, SurveyVote, SurveyQuestionOption } = require("./model");
 const mongoose = require("mongoose");
 
-// Survey CRUD
-// const createSurvey = async (surveyData) => {
-//   const session = await mongoose.startSession();
-//   session.startTransaction();
-//   try {
-//     // Process questions sequentially instead of in parallel
-//     const questionsWithOptions = [];
-//     for (const questionData of surveyData.questions) {
-//       const options = await SurveyQuestionOption.insertMany(
-//         questionData.options.map((opt) => ({
-//           content: opt.content,
-//           color: opt.color,
-//         })),
-//         { session }
-//       );
-
-//       questionsWithOptions.push({
-//         question: questionData.question,
-//         options: options.map((opt) => opt._id),
-//       });
-//     }
-
-//     // Create the survey document
-//     const [survey] = await Survey.create(
-//       [
-//         {
-//           ...surveyData,
-//           questions: questionsWithOptions,
-//         },
-//       ],
-//       { session }
-//     );
-
-//     await session.commitTransaction();
-
-//     // Fetch and populate the created survey
-//     return await Survey.findById(survey._id).populate({
-//       path: "questions.options",
-//       model: "SurveyQuestionOption",
-//     });
-//   } catch (error) {
-//     await session.abortTransaction();
-//     throw error;
-//   } finally {
-//     session.endSession();
-//   }
-// };
-
 
 const createSurvey = async (surveyData) => {
-  console.log(surveyData);
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -107,6 +58,7 @@ const updateSurvey = async (surveyId, updateData) => {
     categories,
     thumbnail,
     liveEndedAt,
+    liveStartedAt,
     questions,
   } = updateData;
   const deletedQuestions = JSON.parse(updateData.deletedQuestions);
@@ -119,6 +71,7 @@ const updateSurvey = async (surveyId, updateData) => {
   if (categories) survey.categories = categories;
   if (thumbnail) survey.thumbnail = thumbnail;
   if (liveEndedAt) survey.liveEndedAt = liveEndedAt;
+  if (liveStartedAt) survey.liveStartedAt = liveStartedAt;
   // for creating new questions
   if (questions && questions.length > 0) {
     for (const questionData of questions) {
@@ -486,8 +439,8 @@ const voteSurvey = async (surveyId, votes, userId) => {
     const survey = await Survey.findById(surveyId).session(session);
     if (!survey) throw new Error("Survey not found");
 
-    if (!isLive(survey.liveEndedAt)) {
-      throw new Error("Survey is not active");
+    if (!isLive(survey.liveStartedAt, survey.liveEndedAt)) {
+      throw new Error("The Survey is no longer live");
     }
 
     // Validate all votes before proceeding
@@ -564,8 +517,7 @@ const getSurveyResults = async (surveyId) => {
           question: question._id,
         }).populate("option");
 
-        // Use survey.createdAt as the start date
-        const startDate = new Date(survey.createdAt);
+        const startDate = new Date(survey.liveStartedAt);
         const endDate = new Date(survey.liveEndedAt);
 
         // Set to the first of each month for consistent comparison
@@ -729,7 +681,7 @@ const getQuestionResults = async (surveyId, questionId, filters) => {
       startDate.setMonth(startDate.getMonth() - filters.monthDuration + 1);
     } else {
       // If no monthDuration, use the entire range from survey.createdAt to liveEndedAt
-      startDate = new Date(survey.createdAt);
+      startDate = new Date(survey.liveStartedAt);
       endDate = new Date(survey.liveEndedAt);
     }
 

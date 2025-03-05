@@ -23,6 +23,10 @@ const surveySchema = new mongoose.Schema(
     },
     questions: [surveyQuestionSchema],
    
+    liveStartedAt: {
+      type: Date,
+      required: true,
+    },
     liveEndedAt: {
       type: Date,
       required: true,
