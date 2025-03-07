@@ -51,6 +51,7 @@ const isLive = (start, end) => {
 
   return currentDate >= startDate && currentDate <= endDate;
 };
+ 
 module.exports = {
   generateToken,
   generateOTP,
