@@ -101,7 +101,7 @@ const updateArticle = async (req, res) => {
 
     const result = await articleService.updateArticle(
       req.params.id,
-      req.user,
+      req.adminUser,
       req.body,
       req
     );
@@ -127,7 +127,7 @@ const updateArticle = async (req, res) => {
 
 const deleteArticle = async (req, res) => {
   try {
-    await articleService.deleteArticle(req.params.id, req.user);
+    await articleService.deleteArticle(req.params.id, req.adminUser);
     sendResponse(res, {
       message: "Article deleted successfully",
     });

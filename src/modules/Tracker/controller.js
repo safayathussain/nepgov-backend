@@ -119,7 +119,7 @@ const updateTracker = async (req, res) => {
       });
     }
 
-    const result = await trackerService.updateTracker(req.params.id, req.body, req.user);
+    const result = await trackerService.updateTracker(req.params.id, req.body, req.adminUser);
     sendResponse(res, {
       message: "Tracker updated successfully",
       data: result,
