@@ -1,10 +1,9 @@
 const { isLive, calculateAge } = require("../../utils/function");
 const { Survey, SurveyVote, SurveyQuestionOption } = require("./model");
 const mongoose = require("mongoose");
-
+const Category = require("../Category/model");
 
 const createSurvey = async (surveyData) => {
-  
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -37,7 +36,13 @@ const createSurvey = async (surveyData) => {
       ],
       { session }
     );
-
+    const categoryIds = trackerData.categories.map(
+      (category) => new mongoose.Types.ObjectId(category)
+    );
+    await Category.updateMany(
+      { _id: { $in: categoryIds } },
+      { $inc: { surveysCount: 1 } }
+    );
     await session.commitTransaction();
 
     // Fetch and populate the created survey

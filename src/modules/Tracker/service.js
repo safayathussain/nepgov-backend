@@ -1,6 +1,7 @@
 const { calculateAge, isLive } = require("../../utils/function");
 const { Tracker } = require("./model");
 const { TrackerVote, TrackerOption } = require("./model");
+const Category = require("../Category/model");
 const mongoose = require("mongoose");
 
 const createTracker = async (trackerData) => {
@@ -20,7 +21,10 @@ const createTracker = async (trackerData) => {
     options: optionIds,
     categories: categoryIds,
   });
-
+  await Category.updateMany(
+    { _id: { $in: categoryIds } },
+    { $inc: { trackersCount: 1 } }
+  );
   return tracker.populate(["options", "categories"]);
 };
 
@@ -408,8 +412,8 @@ const voteTracker = async (trackerId, optionId, userId) => {
     throw new Error("User has already voted");
   }
   const isLive = isLive(tracker.liveStartedAt, tracker.liveEndedAt);
-  if(!isLive){
-    throw new Error("The tracker is no longer live")
+  if (!isLive) {
+    throw new Error("The tracker is no longer live");
   }
   await TrackerVote.create({
     tracker: trackerId,
