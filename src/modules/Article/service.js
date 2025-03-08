@@ -100,10 +100,7 @@ const deleteArticle = async (id, userId) => {
   const article = await Article.findById(id);
   if (!article) throw new Error("Article not found");
   
-  // Check if user owns the article
-  if (article.user.toString() !== userId.toString()) {
-    throw new Error("Not authorized to delete this article");
-  }
+  
   
   // Update article counts in categories
   await Category.updateMany(
