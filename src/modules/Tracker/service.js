@@ -331,10 +331,35 @@ const trackerResult = async (trackerId, query) => {
 };
 
 const deleteTracker = async (id) => {
-  const tracker = await Tracker.findByIdAndDelete(id);
-  if (!tracker) throw new Error("Tracker not found");
+const session = await mongoose.startSession();
+  session.startTransaction();
 
-  return;
+  try {
+    const tracker = await Tracker.findById(id).session(session);
+    if (!tracker) throw new Error("Tracker not found");
+
+    // Delete all associated options for each question
+      await TrackerOption.deleteMany(
+        {
+          _id: { $in: tracker.options },
+        },
+        { session }
+      );
+
+    // Delete the survey itself
+    await Tracker.findByIdAndDelete(id, { session });
+    await Category.updateMany(
+      { _id: { $in: tracker.categories } },
+      { $inc: { trackersCount: -1 } }
+    );
+    await session.commitTransaction();
+    return;
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
 };
 
 const updateTracker = async (id, updateData, userId) => {

@@ -250,7 +250,10 @@ const deleteSurvey = async (surveyId) => {
 
     // Delete the survey itself
     await Survey.findByIdAndDelete(surveyId, { session });
-
+    await Category.updateMany(
+      { _id: { $in: survey.categories } },
+      { $inc: { surveysCount: -1 } }
+    );
     await session.commitTransaction();
     return;
   } catch (error) {
