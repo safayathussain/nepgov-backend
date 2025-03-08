@@ -3,6 +3,7 @@ const authService = require("./service");
 const { sendResponse } = require("../../utils/response");
 const User = require("../User/model");
 const jwt = require("jsonwebtoken");
+const { accessTokenDuration } = require("../../utils/constants");
 
 const register = async (req, res) => {
   try {
@@ -189,7 +190,7 @@ const refreshToken = async (req, res) => {
           httpOnly: true,
           secure: true,
           sameSite: "none",
-          maxAge: 60 * 60 * 1000, // 1 hour
+          maxAge: accessTokenDuration, // 1 hour
         });
 
         return res.json({ accessToken: newAccessToken });

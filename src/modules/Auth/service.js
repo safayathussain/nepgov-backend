@@ -8,6 +8,10 @@ const {
 } = require("../../utils/function");
 const { sendEmail, getOtpEmailTamplate } = require("../../utils/email");
 const connectRedis = require("../../config/redis");
+const {
+  accessTokenDuration,
+  refreshTokenDuration,
+} = require("../../utils/constants");
 const redisClient = connectRedis();
 
 const registerUser = async (userData, role = "user", res) => {
@@ -42,14 +46,14 @@ const signIn = async (email, password, res, req) => {
         httpOnly: true,
         secure: true,
         sameSite: "none",
-        maxAge: 60 * 60 * 1000, // 1 hour
+        maxAge: accessTokenDuration,
       });
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: true,
         sameSite: "none",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: refreshTokenDuration,
       });
     }
   }
@@ -58,7 +62,7 @@ const signIn = async (email, password, res, req) => {
     data: {
       user: {
         ...user.toObject(),
-        accessToken 
+        accessToken,
       },
     },
   };
@@ -75,21 +79,21 @@ const adminSignIn = async (email, password, res, req) => {
     httpOnly: true,
     secure: true,
     sameSite: "none",
-    maxAge: 60 * 60 * 1000, // 1 hour
+    maxAge: accessTokenDuration
   });
 
   res.cookie("adminRefreshToken", refreshToken, {
     httpOnly: true,
     secure: true,
     sameSite: "none",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: refreshTokenDuration
   });
   return {
     message: "Sign-in successful",
     data: {
       user: {
         ...user.toObject(),
-        accessToken
+        accessToken,
       },
     },
   };
@@ -118,17 +122,17 @@ const verifyOtp = async (email, otp, res, req) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
   if (req.cookieConsent === "accepted") {
-    res.cookie("refreshToken", accessToken, {
+    res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: accessTokenDuration
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: 60 * 60 * 1000, //1h
+      maxAge: refreshTokenDuration
     });
   }
   return { message: "OTP verified successfully", data: { user, accessToken } };
@@ -161,13 +165,13 @@ const resetPassword = async (email, newPassword, otp, res, req) => {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: refreshTokenDuration
     });
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: 60 * 60 * 1000, //1h
+      maxAge: accessTokenDuration
     });
   }
   return {

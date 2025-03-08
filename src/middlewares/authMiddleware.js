@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { generateAccessToken } = require("../utils/function");
+const { accessTokenDuration } = require("../utils/constants");
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -96,7 +97,7 @@ async function refreshAccessToken(refreshToken, res, cookieName) {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: 60 * 60 * 1000, // 1 hour
+      maxAge: accessTokenDuration,  
     });
     
     return newAccessToken;
