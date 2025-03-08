@@ -36,7 +36,7 @@ const createSurvey = async (surveyData) => {
       ],
       { session }
     );
-    const categoryIds = trackerData.categories.map(
+    const categoryIds = surveyData.categories.map(
       (category) => new mongoose.Types.ObjectId(category)
     );
     await Category.updateMany(
