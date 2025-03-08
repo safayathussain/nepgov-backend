@@ -57,7 +57,6 @@ const authMiddleware = async (req, res, next) => {
         // Continue to admin token check
       }
     }
-    
     if (tokens.admin.access) {
       try {
         const decodedAdmin = jwt.verify(tokens.admin.access, process.env.JWT_ACCESS_SECRET);
