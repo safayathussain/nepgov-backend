@@ -4,9 +4,6 @@ const mongoose = require("mongoose");
 const Category = require("../Category/model");
 
 const createSurvey = async (surveyData) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     // Create options documents first
     const questionsWithOptions = await Promise.all(
@@ -15,8 +12,7 @@ const createSurvey = async (surveyData) => {
           questionData.options.map((opt) => ({
             content: opt.content,
             color: opt.color,
-          })),
-          { session }
+          }))
         );
 
         return {
@@ -27,23 +23,20 @@ const createSurvey = async (surveyData) => {
     );
 
     // Create the survey document
-    const [survey] = await Survey.create(
-      [
-        {
-          ...surveyData,
-          questions: questionsWithOptions,
-        },
-      ],
-      { session }
-    );
+    const survey = await Survey.create({
+      ...surveyData,
+      questions: questionsWithOptions,
+    });
+
+    // Update categories
     const categoryIds = surveyData.categories.map(
       (category) => new mongoose.Types.ObjectId(category)
     );
+    
     await Category.updateMany(
       { _id: { $in: categoryIds } },
       { $inc: { surveysCount: 1 } }
     );
-    await session.commitTransaction();
 
     // Fetch and populate the created survey
     return await Survey.findById(survey._id).populate({
@@ -51,10 +44,7 @@ const createSurvey = async (surveyData) => {
       model: "SurveyQuestionOption",
     });
   } catch (error) {
-    await session.abortTransaction();
     throw error;
-  } finally {
-    session.endSession();
   }
 };
 const updateSurvey = async (surveyId, updateData) => {
@@ -732,9 +722,7 @@ const getQuestionResults = async (surveyId, questionId, filters) => {
 
         if (monthYearVotes[monthYearKey]) {
           monthYearVotes[monthYearKey].total++;
-          console.log(
-            monthYearVotes[monthYearKey].options[vote.option._id.toString()]
-          );
+           
           if (
             monthYearVotes[monthYearKey].options[vote.option._id.toString()]
           ) {

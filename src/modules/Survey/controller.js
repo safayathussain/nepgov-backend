@@ -96,7 +96,6 @@ const updateSurvey = async (req, res) => {
         message: errors.array()[0].msg,
       });
     }
-    console.log(req.body);
     const result = await surveyService.updateSurvey(
       req.params.id,
       {

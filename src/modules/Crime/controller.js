@@ -16,7 +16,6 @@ const createCrime = async (req, res) => {
       ...req.body,
       user: req.user 
     };
-    console.log(crimeData)
     const result = await crimeService.createCrime(crimeData);
     sendResponse(res, {
       message: "Crime report created successfully",
