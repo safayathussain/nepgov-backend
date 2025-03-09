@@ -2,6 +2,12 @@
 const { body } = require("express-validator");
 
 const createSurveyValidation = [
+  body("thumbnail").custom((value, { req }) => {
+    if (!req.file) {
+      throw new Error("Thumbnail file is required");
+    }
+    return true;
+  }),
   body("topic").notEmpty().withMessage("Topic is required"),
   body("liveEndedAt")
     .isISO8601()
@@ -28,6 +34,7 @@ const createSurveyValidation = [
   body("questions.*.options.*.color")
     .notEmpty()
     .withMessage("Option color is required"),
+ 
 ];
 
 const updateSurveyValidation = [
