@@ -436,8 +436,8 @@ const voteTracker = async (trackerId, optionId, userId) => {
   if (existingVote) {
     throw new Error("User has already voted");
   }
-  const isLive = isLive(tracker.liveStartedAt, tracker.liveEndedAt);
-  if (!isLive) {
+  const islive = isLive(tracker.liveStartedAt, tracker.liveEndedAt);
+  if (!islive) {
     throw new Error("The tracker is no longer live");
   }
   await TrackerVote.create({
