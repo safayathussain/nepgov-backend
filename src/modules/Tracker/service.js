@@ -307,6 +307,8 @@ const trackerResult = async (trackerId, query) => {
     return {
       labels,
       datasets,
+      liveEndedAt: tracker.liveEndedAt,
+      liveStartedAt: tracker.liveStartedAt,
       // monthlyData: monthYearVotes,
       totalVotes: votes.length,
       topic: tracker.topic,

@@ -32,7 +32,7 @@ const createSurvey = async (surveyData) => {
     const categoryIds = surveyData.categories.map(
       (category) => new mongoose.Types.ObjectId(category)
     );
-    
+
     await Category.updateMany(
       { _id: { $in: categoryIds } },
       { $inc: { surveysCount: 1 } }
@@ -602,6 +602,8 @@ const getSurveyResults = async (surveyId) => {
         // Return the graph data for this question
         return {
           _id: question._id,
+          liveEndedAt: survey.liveEndedAt,
+          liveStartedAt: survey.liveStartedAt,
           labels,
           datasets,
           totalVotes: votes.length,
@@ -722,7 +724,7 @@ const getQuestionResults = async (surveyId, questionId, filters) => {
 
         if (monthYearVotes[monthYearKey]) {
           monthYearVotes[monthYearKey].total++;
-           
+
           if (
             monthYearVotes[monthYearKey].options[vote.option._id.toString()]
           ) {
@@ -803,6 +805,8 @@ const getQuestionResults = async (surveyId, questionId, filters) => {
     return {
       _id: question._id,
       labels,
+      liveEndedAt: survey.liveEndedAt,
+      liveStartedAt: survey.liveStartedAt,
       datasets,
       totalVotes: votes.length,
       topic: question.question,
