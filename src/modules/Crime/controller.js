@@ -11,12 +11,7 @@ const createCrime = async (req, res) => {
         success: false,
         message: errors.array()[0].msg,
       });
-
-    const crimeData = {
-      ...req.body,
-      user: req.user 
-    };
-    const result = await crimeService.createCrime(crimeData);
+    const result = await crimeService.createCrime(req.body);
     sendResponse(res, {
       message: "Crime report created successfully",
       data: result,

@@ -42,19 +42,11 @@ const CrimeSchema = new mongoose.Schema(
       type: String,
       enum: ["yes", "no", "dontKnow"],
       required: true,
-    },
-    keepInContact: {
-      type: Boolean,
-      required: true,
-    },
+    }, 
     isSeenByAdmin: {
       type: Boolean,
       default: false,
-    },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
+    }, 
   },
   { timestamps: true }
 );

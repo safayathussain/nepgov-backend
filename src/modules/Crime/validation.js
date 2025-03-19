@@ -48,13 +48,7 @@ const createCrimeValidation = [
     .withMessage("Weapon status is required")
     .isIn(["yes", "no", "dontKnow"])
     .withMessage("Weapon status must be 'yes', 'no', or 'dontKnow'"),
-
-  // Boolean field
-  body("keepInContact")
-    .notEmpty()
-    .withMessage("Keep in contact status is required")
-    .isBoolean()
-    .withMessage("Keep in contact must be true or false"),
+ 
 ];
 
 module.exports = { createCrimeValidation };

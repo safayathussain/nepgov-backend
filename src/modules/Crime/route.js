@@ -12,7 +12,7 @@ const {
 const { createCrimeValidation } = require("./validation");
 
 // Public routes
-router.post("/create", createCrimeValidation, authMiddleware, createCrime);
+router.post("/create", createCrimeValidation,   createCrime);
 
 // Protected routes
 router.get("/", authMiddleware, roleMiddleware(["admin"]), getAllCrimes);
