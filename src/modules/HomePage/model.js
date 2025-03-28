@@ -16,6 +16,10 @@ const homePageSchema = new mongoose.Schema({
     trackers: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Tracker'
+    }],
+    articles: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Article'
     }]
   },
   liveSurveyTracker: [{

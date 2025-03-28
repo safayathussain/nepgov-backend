@@ -17,6 +17,11 @@ const getHomePage = async () => {
       populate: { path: "options categories" },
     })
     .populate({
+      path: "featuredSurveyTracker.articles",
+      populate: { path: "categories" },
+
+    })
+    .populate({
       path: "liveSurveyTracker.data",
       populate: { path: "categories" },
     });
@@ -72,6 +77,7 @@ const updateHomePage = async (homePageData) => {
     "hero.dailyQuestion",
     "featuredSurveyTracker.surveys",
     "featuredSurveyTracker.trackers",
+    "featuredSurveyTracker.articles",
     "liveSurveyTracker.data",
   ]);
 };

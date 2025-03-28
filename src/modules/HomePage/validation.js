@@ -19,6 +19,10 @@ const updateHomePageValidation = [
     .optional()
     .custom(isValidObjectId)
     .withMessage("Invalid tracker ID"),
+  body("featuredSurveyTracker.articles.*")
+    .optional()
+    .custom(isValidObjectId)
+    .withMessage("Invalid article ID"),
 
   body("liveSurveyTracker.*.data")
     .optional()
