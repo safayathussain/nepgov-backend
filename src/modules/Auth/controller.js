@@ -235,7 +235,7 @@ const updateProfile = async (req, res) => {
       throw new Error("You are not allowed to update this profile");
     }
     if (req.file) {
-      req.body.profilePicture = '/'+req.file.path.replace(/\\/g, "/");
+      req.body.profilePicture = req.file.filename;
     }
     const result = await authService.updateProfile(req.user, req.body);
     sendResponse(res, { message: "Profile updated", data: result.data });
