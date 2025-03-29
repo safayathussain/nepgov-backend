@@ -20,7 +20,7 @@ app.use("/uploads", (req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*"); // Allow image access from all origins (adjust for production)
   next();
 });
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+// app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // CORS CONFIGURATIONS
 const whitelist = [

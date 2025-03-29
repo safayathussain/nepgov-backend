@@ -83,7 +83,7 @@ const updateArticle = async (id, userId, updateData, req) => {
     );
   }
   if (req.file) {
-    updateData.thumbnail = `/uploads/${req.file.filename}`;
+    updateData.thumbnail = `${req.file.filename}`;
   }
   const updatedArticle = await Article.findByIdAndUpdate(
     id,

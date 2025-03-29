@@ -22,7 +22,7 @@ const createArticle = async (req, res) => {
 
     const articleData = {
       ...req.body,
-      thumbnail: req.file ? `/uploads/${req.file.filename}` : null,
+      thumbnail: req.file ? `${req.file.filename}` : null,
       user: req.user, // From auth middleware
     };
     if (!articleData.thumbnail) {

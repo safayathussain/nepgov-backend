@@ -1,60 +1,68 @@
 const multiparty = require("multiparty");
-const fs = require("fs");
-const path = require("path");
+const cloudinary = require("cloudinary").v2;
 const { v4: uuidv4 } = require('uuid');
 
-// Function to handle file uploads
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Function to handle file uploads with Cloudinary
 const uploadForFilesOnly = (req, res, next) => {
   const form = new multiparty.Form({
-    uploadDir: "./uploads", // Directory to store uploaded files
     maxFilesSize: 5 * 1024 * 1024, // Max file size (5MB)
   });
-  // Parse the form data
-  form.parse(req, (err, fields, files) => {
+
+  form.parse(req, async (err, fields, files) => {
     if (err) {
       return next(new Error("File upload error: " + err.message));
     }
 
     const processedFiles = [];
 
-    // Process each file in the 'files' object
-    Object.keys(files).forEach((key) => {
-      const fileArray = files[key]; // Array of files under the current key
+    try {
+      // Process each file in the 'files' object
+      for (const key of Object.keys(files)) {
+        const fileArray = files[key];
 
-      fileArray.forEach((uploadedFile) => {
-        const fileTypes = /jpeg|jpg|png/;
-        const extname = path.extname(uploadedFile.originalFilename).toLowerCase();
-        const mimetype = fileTypes.test(uploadedFile.headers["content-type"]);
+        for (const uploadedFile of fileArray) {
+          const fileTypes = /jpeg|jpg|png/;
+          const extname = uploadedFile.originalFilename.match(/\.[0-9a-z]+$/i)[0]?.toLowerCase();
+          const mimetype = fileTypes.test(uploadedFile.headers["content-type"]);
 
-        if (fileTypes.test(extname) && mimetype) {
-          const fileExtension = extname; // Ensure the extension is added to the new filename
-          const newFileName = `${Date.now()}-${uuidv4()}${fileExtension}`;
-          const newFilePath = path.join("./uploads", newFileName);
+          if (fileTypes.test(extname) && mimetype) {
+            const uniqueName = `${Date.now()}-${uuidv4()}`;
+            
+            // Upload to Cloudinary
+            const result = await cloudinary.uploader.upload(uploadedFile.path, {
+              folder: "uploads",
+              public_id: uniqueName,
+              resource_type: "image",
+              context: { original_filename: uploadedFile.originalFilename }
+            });
 
-          try {
-            fs.renameSync(uploadedFile.path, newFilePath); // Synchronous to ensure order
             processedFiles.push({
               fieldName: uploadedFile.fieldName,
               originalName: uploadedFile.originalFilename,
-              savedName: newFileName,
-              path: newFilePath,
+              savedName: uniqueName,
+              path: result.secure_url, // Cloudinary URL
+              public_id: result.public_id // Cloudinary public_id
             });
-          } catch (err) {
-            return next(new Error("Error saving file: " + err.message));
           }
-        } else {
-          // Remove invalid file
-          fs.unlink(uploadedFile.path, () => {}); // Silently handle deletion of invalid files
         }
-      });
-    });
+      }
 
-    if (processedFiles.length === 0) {
-      return next(new Error("No valid files uploaded"));
+      if (processedFiles.length === 0) {
+        return next(new Error("No valid files uploaded"));
+      }
+
+      req.files = processedFiles;
+      next();
+    } catch (error) {
+      return next(new Error("Error uploading to Cloudinary: " + error.message));
     }
-
-    req.files = processedFiles; // Attach processed files to the request
-    next();
   });
 };
 
