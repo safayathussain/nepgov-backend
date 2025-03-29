@@ -607,7 +607,8 @@ const getSurveyResults = async (surveyId) => {
           labels,
           datasets,
           totalVotes: votes.length,
-          topic: question.question,
+          topic: survey.topic,
+          question: question.question,
           options: question.options.map((option) => {
             const optionId = option._id.toString();
             const optionVotes = optionTotalVotes[optionId];
