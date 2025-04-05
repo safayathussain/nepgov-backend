@@ -23,7 +23,7 @@ async function sendEmail(to, subject, htmlContent,  ) {
   }
 }
 
-function getOtpEmailTamplate(otp) {
+function getOtpEmailTemplate(otp) {
   return `<!DOCTYPE html>
       <html lang="en">
       <head>
@@ -92,4 +92,4 @@ function getOtpEmailTamplate(otp) {
       </body>
       </html>`;
 }
-module.exports = { sendEmail, getOtpEmailTamplate };
+module.exports = { sendEmail, getOtpEmailTemplate };

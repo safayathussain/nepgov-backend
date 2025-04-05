@@ -15,6 +15,9 @@ const trackerRoute = require("./modules/Tracker/route");
 const surveyRoute = require("./modules/Survey/route");
 const crimeRoute = require("./modules/Crime/route");
 const HomePageRoute = require("./modules/HomePage/route");
+const EmailCategoryRoute = require("./modules/Email/Category/route");
+const EmailTemplateRoute = require("./modules/Email/Template/route");
+const EmailLogRoute = require("./modules/Email/Log/route");
 //EndPoint
 
 router.use("/auth", authRoute); 
@@ -27,6 +30,9 @@ router.use("/tracker", trackerRoute);
 router.use("/survey", surveyRoute);
 router.use("/crime", crimeRoute)
 router.use("/home-page", HomePageRoute)
+router.use("/email-category", EmailCategoryRoute)
+router.use("/email-template", EmailTemplateRoute)
+router.use("/email-log", EmailLogRoute)
 
 
 

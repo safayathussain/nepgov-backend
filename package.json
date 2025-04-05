@@ -27,6 +27,7 @@
     "multiparty": "^4.2.3",
     "nodemailer": "^6.10.0",
     "path": "^0.12.7",
+    "postmark": "^4.0.5",
     "redis": "^4.7.0",
     "uuid": "^11.0.5"
   },

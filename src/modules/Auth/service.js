@@ -6,7 +6,7 @@ const {
   generateAccessToken,
   generateRefreshToken,
 } = require("../../utils/function");
-const { sendEmail, getOtpEmailTamplate } = require("../../utils/email");
+const { sendEmail, getOtpEmailTemplate } = require("../../utils/email");
 const connectRedis = require("../../config/redis");
 const {
   accessTokenDuration,
@@ -28,7 +28,7 @@ const registerUser = async (userData, role = "user", res) => {
   await redisClient.set(`otp:${email}`, otp, {
     EX: 300,
   });
-  sendEmail(email, "Otp for registration", getOtpEmailTamplate(otp));
+  sendEmail(email, "Otp for registration", getOtpEmailTemplate(otp));
 
   return { data: newUser };
 };
@@ -107,7 +107,7 @@ const sendOtp = async (email) => {
   await redisClient.set(`otp:${email}`, otp, {
     EX: 300,
   });
-  sendEmail(email, "Otp", getOtpEmailTamplate(otp));
+  sendEmail(email, "Otp", getOtpEmailTemplate(otp));
   return { message: "OTP sent successfully" };
 };
 
