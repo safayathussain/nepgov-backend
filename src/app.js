@@ -33,7 +33,17 @@ const whitelist = [
   process.env.FRONTEND_URL,
   process.env.FRONTEND_URL_ADMIN
 ];
-
+const webhookCorsOptions = {
+  origin: (origin, callback) => {
+    // Allow all in dev or if no origin (server-to-server)
+    if (process.env.NODE_ENV !== "production" || !origin) {
+      return callback(null, true);
+    }
+    callback(null, true); // Optionally allow all for webhooks, or add specific checks
+  },
+  methods: ["POST", "OPTIONS"], // Postmark uses POST
+  allowedHeaders: ["Content-Type"],
+};
 const corsOptions = {
   credentials: true,
   origin: (origin, callback) => {
@@ -56,6 +66,11 @@ app.use(cors(corsOptions));
 
 
 app.use("/api/v1", checkCookieConsent, router);
+
+app.use("/api/v1/webhooks/postmark", cors(webhookCorsOptions), (req, res) => {
+  console.log("Postmark webhook received:", req.body);
+  res.status(200).send("Webhook processed");
+});
 
 app.use("*", (req, res) => {
   res.status(404).json({ status: "fail", data: "Route Not Found" });
