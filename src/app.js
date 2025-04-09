@@ -10,7 +10,6 @@ const checkCookieConsent = require("./middlewares/checkCookieConsent");
 const { postMarkWebhook } = require("./modules/Email/webhook");
 dotenv.config();
 
-
 connectDB();
 // const redisClient = connectRedis()
 const app = express();
@@ -32,7 +31,7 @@ const whitelist = [
   "https://account.postmarkapp.com",
   "https://postmarkapp.com",
   process.env.FRONTEND_URL,
-  process.env.FRONTEND_URL_ADMIN
+  process.env.FRONTEND_URL_ADMIN,
 ];
 const webhookCorsOptions = {
   origin: (origin, callback) => {
@@ -45,7 +44,9 @@ const webhookCorsOptions = {
   methods: ["POST", "OPTIONS"], // Postmark uses POST
   allowedHeaders: ["Content-Type"],
 };
-app.use("/api/v1/webhooks/postmark", cors(webhookCorsOptions), (req, res) => postMarkWebhook(req, res));
+app.use("/api/v1/webhooks/postmark", cors(webhookCorsOptions), postMarkWebhook);
+
+
 const corsOptions = {
   credentials: true,
   origin: (origin, callback) => {
@@ -59,20 +60,22 @@ const corsOptions = {
       }
     }
   },
-  allowedHeaders: ["Content-Type", "authorization", "X-Requested-With", "x-user-consent"],
+  allowedHeaders: [
+    "Content-Type",
+    "authorization",
+    "X-Requested-With",
+    "x-user-consent",
+  ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
 };
-
 
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
-
 app.use("/api/v1", checkCookieConsent, router);
-
 
 app.use("*", (req, res) => {
   res.status(404).json({ status: "fail", data: "Route Not Found" });
 });
 
-module.exports = {app}
+module.exports = { app };
