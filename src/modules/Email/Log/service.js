@@ -2,10 +2,7 @@ const postmark = require("postmark");
 const EmailLog = require("./model");
 const EmailTemplate = require("../Template/model");
 const User = require("../../User/model");
-
-function stripHtml(html) {
-  return html.replace(/<[^>]*>/g, "").trim();
-}
+ 
 // Initialize Postmark client
 let client;
 try {
@@ -29,47 +26,49 @@ const sendEmail = async (req, res) => {
     // Fetch template
     const template = await EmailTemplate.findById(templateId);
     if (!template) {
-      return res.status(404).json({ success: false, message: "Template not found" });
-    }
-
-    // Fetch users
-    const users = await User.find({ _id: { $in: recipients } });
-    if (users.length === 0) {
-      return res.status(404).json({ success: false, message: "No valid users found" });
+      return res.status(404).json({ 
+        success: false, 
+        message: "Template not found" 
+      });
     }
 
     // Create email logs and prepare batch email data
     const emailData = await Promise.all(
-      users.map(async (user) => {
-        if (!user.email) return null;
+      recipients.map(async (recipient) => {
+        if (!recipient.email) return null;
 
+        // Create email log with provided data
         const emailLog = await EmailLog.create({
           template: templateId,
-          recipient: user._id,
-          status: "pending",
-          createdAt: new Date(),
+          recipient: recipient.email,
+          recipientId: null,
+          firstName: recipient.firstName,
+          lastName: recipient.lastName,
+          status: "pending"
         });
 
-        const htmlContent = template.htmlContent.replace(
-          "[first name]",
-          user.firstName?.trim() || user.email.split("@")[0] || "User"
-        );
+        // Replace placeholders in template
+        let htmlContent = template.htmlContent
+          .replace("[first name]", recipient.firstName || "User")
+          .replace("[last name]", recipient.lastName || "");
 
         return {
           From: process.env.POSTMARK_SENDER_EMAIL,
-          To: user.email,
+          To: recipient.email,
           Subject: template.subject,
           HtmlBody: htmlContent,
           TextBody: template.textContent || htmlContent.replace(/<[^>]*>/g, "").trim(),
           TrackOpens: true,
           Tag: `broadcast-${templateId}`,
-          Metadata: { userId: user._id.toString(), templateId, emailLogId: emailLog._id },
+          Metadata: { 
+            templateId, 
+            emailLogId: emailLog._id 
+          },
           MessageStream: "broadcast"
         };
       })
     );
 
-    // Filter out null entries (users without emails)
     const validEmailData = emailData.filter(Boolean);
 
     if (validEmailData.length === 0) {
@@ -79,33 +78,27 @@ const sendEmail = async (req, res) => {
       });
     }
 
-    // Send emails in a batch
     const batchResponses = await client.sendEmailBatch(validEmailData);
 
-    // Update email logs based on batch responses
     const updatePromises = batchResponses.map(async (response, index) => {
       const emailLogId = validEmailData[index].Metadata.emailLogId;
       const status = (response.Status || "queued").toLowerCase();
 
       if (response.ErrorCode === 0) {
-        // Success
         return EmailLog.findByIdAndUpdate(
           emailLogId,
           {
             status: status === "queued" ? "queued" : "sent",
             postmarkMessageId: response.MessageID,
-            queuedAt: new Date(),
           },
           { new: true }
         );
       } else {
-        // Failure
         return EmailLog.findByIdAndUpdate(
           emailLogId,
           {
             status: "failed",
             errorMessage: response.Message,
-            failedAt: new Date(),
           },
           { new: true }
         );
@@ -114,7 +107,6 @@ const sendEmail = async (req, res) => {
 
     const updatedLogs = await Promise.all(updatePromises);
 
-    // Prepare response
     const successful = batchResponses.filter((r) => r.ErrorCode === 0).length;
     const failed = batchResponses.length - successful;
 
@@ -130,7 +122,14 @@ const sendEmail = async (req, res) => {
       })),
     });
   } catch (error) {
-    console.error("Broadcast email sending failed:", error);
+    console.error("Broadcast email sending failed:", {
+      error: error.message,
+      stack: error.stack,
+      templateId,
+      recipientsCount: recipients.length
+    });
+    
+     
     return res.status(500).json({
       success: false,
       message: `Broadcast email sending failed: ${error.message}`,
@@ -141,7 +140,7 @@ const sendEmail = async (req, res) => {
 const getEmailLog = async (id) => {
   const emailLog = await EmailLog.findById(id)
     .populate("template")
-    .populate("recipient");
+    .populate("recipientId");
   if (!emailLog) throw new Error("Email log not found");
   return emailLog;
 };
@@ -150,7 +149,7 @@ const getAllEmailLogs = async () => {
   return await EmailLog.find({})
     .sort({ createdAt: -1 })
     .populate("template")
-    .populate("recipient");
+    .populate("recipientId");
 };
 
 const updateEmailStatus = async (id, status) => {
@@ -163,7 +162,7 @@ const updateEmailStatus = async (id, status) => {
     { new: true }
   )
     .populate("template")
-    .populate("recipient");
+    .populate("recipientId");
   return updatedEmailLog;
 };
 

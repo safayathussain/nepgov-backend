@@ -1,4 +1,5 @@
 const { body } = require("express-validator");
+ 
 
 const sendEmailValidation = [
   body("templateId")
@@ -7,10 +8,19 @@ const sendEmailValidation = [
   body("recipients")
     .isArray({ min: 1 })
     .withMessage("Recipients must be a non-empty array"),
-  body("recipients.*")
-    .isMongoId()
-    .withMessage("Each recipient must be a valid user ID"),
+  body("recipients.*.email")
+    .isEmail()
+    .withMessage("Each recipient must have a valid email"),
+  body("recipients.*.firstName")
+    .isString()
+    .notEmpty()
+    .withMessage("Each recipient must have a first name"),
+  body("recipients.*.lastName")
+    .isString()
+    .notEmpty()
+    .withMessage("Each recipient must have a last name"),
 ];
+ 
  
 
 const updateEmailStatusValidation = [
