@@ -2,7 +2,7 @@ const postmark = require("postmark");
 const EmailLog = require("./model");
 const EmailTemplate = require("../Template/model");
 const User = require("../../User/model");
- 
+
 // Initialize Postmark client
 let client;
 try {
@@ -26,9 +26,9 @@ const sendEmail = async (req, res) => {
     // Fetch template
     const template = await EmailTemplate.findById(templateId);
     if (!template) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Template not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Template not found",
       });
     }
 
@@ -36,15 +36,15 @@ const sendEmail = async (req, res) => {
     const emailData = await Promise.all(
       recipients.map(async (recipient) => {
         if (!recipient.email) return null;
-
+        const dbUser = await User.findOne({ email: recipient.email });
         // Create email log with provided data
         const emailLog = await EmailLog.create({
           template: templateId,
           recipient: recipient.email,
-          recipientId: null,
+          recipientId: dbUser?._id,
           firstName: recipient.firstName,
           lastName: recipient.lastName,
-          status: "pending"
+          status: "pending",
         });
 
         // Replace placeholders in template
@@ -57,14 +57,15 @@ const sendEmail = async (req, res) => {
           To: recipient.email,
           Subject: template.subject,
           HtmlBody: htmlContent,
-          TextBody: template.textContent || htmlContent.replace(/<[^>]*>/g, "").trim(),
+          TextBody:
+            template.textContent || htmlContent.replace(/<[^>]*>/g, "").trim(),
           TrackOpens: true,
           Tag: `broadcast-${templateId}`,
-          Metadata: { 
-            templateId, 
-            emailLogId: emailLog._id 
+          Metadata: {
+            templateId,
+            emailLogId: emailLog._id,
           },
-          MessageStream: "broadcast"
+          MessageStream: "broadcast",
         };
       })
     );
@@ -126,10 +127,9 @@ const sendEmail = async (req, res) => {
       error: error.message,
       stack: error.stack,
       templateId,
-      recipientsCount: recipients.length
+      recipientsCount: recipients.length,
     });
-    
-     
+
     return res.status(500).json({
       success: false,
       message: `Broadcast email sending failed: ${error.message}`,
