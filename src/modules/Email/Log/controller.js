@@ -13,10 +13,10 @@ const sendEmail = async (req, res) => {
       });
 
     const result = await emailLogService.sendEmail(req, res);
-    sendResponse(res, {
-      message: "Email queued successfully",
-      data: result,
-    });
+    // sendResponse(res, {
+    //   message: "Email queued successfully",
+    //   data: result,
+    // });
   } catch (error) {
     sendResponse(res, {
       statusCode: 400,

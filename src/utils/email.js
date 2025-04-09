@@ -1,25 +1,27 @@
 const nodemailer = require("nodemailer");
+const postmark = require("postmark");
 
-async function sendEmail(to, subject, htmlContent,  ) {
-  try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to,
-      subject,
-      html: htmlContent,
+async function sendEmail(to, subject, htmlContent) {
+const client = new postmark.ServerClient(process.env.POSTMARK_SERVER_TOKEN);
+  try { 
+
+    const emailData = {
+      From: process.env.POSTMARK_SENDER_EMAIL,  
+      To: to,
+      Subject: subject,
+      HtmlBody: htmlContent,
+      TextBody: htmlContent.replace(/<[^>]*>/g, "").trim(),  
+      MessageStream: "outbound",  
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`Email sent to ${to}: ${info.response}`);
+    const response = await client.sendEmail(emailData);
+    
+    console.log(`Email sent to ${to}: ${response.Message} (MessageID: ${response.MessageID})`);
+    return response; // Optional: return the response if you need it
+    
   } catch (error) {
     console.error("Error sending email:", error.message);
+    throw error; // Re-throw the error so the caller can handle it if needed
   }
 }
 

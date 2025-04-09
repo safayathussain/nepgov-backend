@@ -17,6 +17,7 @@ try {
 const sendEmail = async (req, res) => {
   const { templateId, recipients } = req.body;
 
+  // Input validation
   if (!templateId || !Array.isArray(recipients) || recipients.length === 0) {
     return res.status(400).json({
       success: false,
@@ -25,78 +26,118 @@ const sendEmail = async (req, res) => {
   }
 
   try {
+    // Fetch template
     const template = await EmailTemplate.findById(templateId);
     if (!template) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Template not found" });
+      return res.status(404).json({ success: false, message: "Template not found" });
     }
 
+    // Fetch users
     const users = await User.find({ _id: { $in: recipients } });
     if (users.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "No valid users found" });
+      return res.status(404).json({ success: false, message: "No valid users found" });
     }
 
-    const emailPromises = users.map(async (user) => {
-      if (!user.email) return null;
+    // Create email logs and prepare batch email data
+    const emailData = await Promise.all(
+      users.map(async (user) => {
+        if (!user.email) return null;
 
-      const emailLog = await EmailLog.create({
-        template: templateId,
-        recipient: user._id,
-        status: "pending",
-        createdAt: new Date(),
-      });
+        const emailLog = await EmailLog.create({
+          template: templateId,
+          recipient: user._id,
+          status: "pending",
+          createdAt: new Date(),
+        });
 
-      return client
-        .sendEmail({
+        const htmlContent = template.htmlContent.replace(
+          "[first name]",
+          user.firstName?.trim() || user.email.split("@")[0] || "User"
+        );
+
+        return {
           From: process.env.POSTMARK_SENDER_EMAIL,
           To: user.email,
           Subject: template.subject,
-          HtmlBody: template.htmlContent.replace(
-            "[first name]",
-            user.firstName?.trim() || user.email.split("@")[0] || "User"
-          ),
-        })
-        .then((response) => {
-          const status = (response.Status || "queued").toLowerCase();
-          return EmailLog.findByIdAndUpdate(
-            emailLog._id,
-            {
-              status: status === "queued" ? "queued" : "sent",
-              postmarkMessageId: response.MessageID,
-              sentAt: new Date(),
-            },
-            { new: true }
-          );
-        })
-        .catch((error) => {
-          return EmailLog.findByIdAndUpdate(
-            emailLog._id,
-            {
-              status: "failed",
-              errorMessage: error.message,
-              failedAt: new Date(),
-            },
-            { new: true }
-          ).then(() => Promise.reject(error));
-        });
+          HtmlBody: htmlContent,
+          TextBody: template.textContent || htmlContent.replace(/<[^>]*>/g, "").trim(),
+          TrackOpens: true,
+          Tag: `broadcast-${templateId}`,
+          Metadata: { userId: user._id.toString(), templateId, emailLogId: emailLog._id },
+          MessageStream: "broadcast"
+        };
+      })
+    );
+
+    // Filter out null entries (users without emails)
+    const validEmailData = emailData.filter(Boolean);
+
+    if (validEmailData.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid email addresses found among recipients",
+      });
+    }
+
+    // Send emails in a batch
+    const batchResponses = await client.sendEmailBatch(validEmailData);
+
+    // Update email logs based on batch responses
+    const updatePromises = batchResponses.map(async (response, index) => {
+      const emailLogId = validEmailData[index].Metadata.emailLogId;
+      const status = (response.Status || "queued").toLowerCase();
+
+      if (response.ErrorCode === 0) {
+        // Success
+        return EmailLog.findByIdAndUpdate(
+          emailLogId,
+          {
+            status: status === "queued" ? "queued" : "sent",
+            postmarkMessageId: response.MessageID,
+            queuedAt: new Date(),
+          },
+          { new: true }
+        );
+      } else {
+        // Failure
+        return EmailLog.findByIdAndUpdate(
+          emailLogId,
+          {
+            status: "failed",
+            errorMessage: response.Message,
+            failedAt: new Date(),
+          },
+          { new: true }
+        );
+      }
     });
 
-    const results = await Promise.allSettled(emailPromises);
+    const updatedLogs = await Promise.all(updatePromises);
 
-    const successful = results.filter((r) => r.status === "fulfilled").length;
+    // Prepare response
+    const successful = batchResponses.filter((r) => r.ErrorCode === 0).length;
+    const failed = batchResponses.length - successful;
 
-    return results.map((r) => ({
-      status: r.status,
-      value: r.value?._id || r.reason?.message,
-    }));
+    return res.status(200).json({
+      success: true,
+      message: `Broadcast processed: ${successful} queued, ${failed} failed`,
+      data: batchResponses.map((r, index) => ({
+        status: r.ErrorCode === 0 ? "queued" : "failed",
+        email: validEmailData[index].To,
+        messageId: r.MessageID,
+        error: r.ErrorCode !== 0 ? r.Message : null,
+        emailLogId: validEmailData[index].Metadata.emailLogId,
+      })),
+    });
   } catch (error) {
-    console.error("Bulk email sending failed:", error);
-    return 
+    console.error("Broadcast email sending failed:", error);
+    return res.status(500).json({
+      success: false,
+      message: `Broadcast email sending failed: ${error.message}`,
+    });
   }
 };
+
 const getEmailLog = async (id) => {
   const emailLog = await EmailLog.findById(id)
     .populate("template")
