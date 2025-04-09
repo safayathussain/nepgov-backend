@@ -44,6 +44,10 @@ const webhookCorsOptions = {
   methods: ["POST", "OPTIONS"], // Postmark uses POST
   allowedHeaders: ["Content-Type"],
 };
+app.use("/api/v1/webhooks/postmark", cors(webhookCorsOptions), (req, res) => {
+  console.log("Postmark webhook received:", req.body);
+  res.status(200).send("Webhook processed");
+});
 const corsOptions = {
   credentials: true,
   origin: (origin, callback) => {
@@ -61,16 +65,13 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
 };
 
+
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
 
 app.use("/api/v1", checkCookieConsent, router);
 
-app.use("/api/v1/webhooks/postmark", cors(webhookCorsOptions), (req, res) => {
-  console.log("Postmark webhook received:", req.body);
-  res.status(200).send("Webhook processed");
-});
 
 app.use("*", (req, res) => {
   res.status(404).json({ status: "fail", data: "Route Not Found" });
