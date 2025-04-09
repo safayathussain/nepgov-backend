@@ -1,8 +1,7 @@
-const EmailLog = require("../Log/model")
-const emailLogService = require("../Log/service")
+const EmailLog = require("../Log/model");
+const emailLogService = require("../Log/service");
 
-const postMarkWebhook = async(req, res) => {
-    
+const postMarkWebhook = async (req, res) => {
   try {
     const { RecordType, MessageID, DeliveredAt, BouncedAt, Details } = req.body;
 
@@ -19,6 +18,8 @@ const postMarkWebhook = async(req, res) => {
       await EmailLog.findByIdAndUpdate(emailLog._id, {
         errorMessage: Details || "Email bounced",
       });
+    } else if (RecordType === "Open") {
+      newStatus = "opened";
     }
 
     await emailLogService.updateEmailStatus(emailLog._id, newStatus);
@@ -27,6 +28,6 @@ const postMarkWebhook = async(req, res) => {
     console.error("Webhook error:", error.message);
     res.status(500).json({ message: "Failed to process webhook" });
   }
-}
+};
 
-module.exports = {postMarkWebhook}
+module.exports = { postMarkWebhook };
