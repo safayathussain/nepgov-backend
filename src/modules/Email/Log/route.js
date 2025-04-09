@@ -31,6 +31,8 @@ router.put(
 
 // Webhook route (unchanged)
 router.post("/webhook", async (req, res) => {
+ return res.status(200).json({ message: "Webhook processed successfully" });
+
   try {
     const { RecordType, MessageID, DeliveredAt, BouncedAt, Details } = req.body;
 
