@@ -1,4 +1,5 @@
 const EmailLog = require("../Log/model")
+const emailLogService = require("../Log/service")
 
 const postMarkWebhook = async(req, res) => {
     
