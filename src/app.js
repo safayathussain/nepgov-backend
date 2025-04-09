@@ -7,6 +7,7 @@ const router = require("./routes");
 const connectRedis = require("./config/redis");
 const path = require("path");
 const checkCookieConsent = require("./middlewares/checkCookieConsent");
+const { postMarkWebhook } = require("./modules/Email/webhook");
 dotenv.config();
 
 
@@ -44,10 +45,7 @@ const webhookCorsOptions = {
   methods: ["POST", "OPTIONS"], // Postmark uses POST
   allowedHeaders: ["Content-Type"],
 };
-app.use("/api/v1/webhooks/postmark", cors(webhookCorsOptions), (req, res) => {
-  console.log("Postmark webhook received:", req.body);
-  res.status(200).send("Webhook processed");
-});
+app.use("/api/v1/webhooks/postmark", cors(webhookCorsOptions), (req, res) => postMarkWebhook(req, res));
 const corsOptions = {
   credentials: true,
   origin: (origin, callback) => {
