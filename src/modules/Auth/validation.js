@@ -21,5 +21,13 @@ const resetPasswordValidation = [
   ...otpValidation,
   body("newPassword").isLength({ min: 6 }).withMessage("New password must be at least 6 characters"),
 ];
-
-module.exports = { registerValidation, emailValidation, otpValidation, resetPasswordValidation };
+const userProfileSurveyValidation = [
+  body("reasonForJoining").notEmpty().withMessage("Reason for joining is required"),
+  body("politicalParty").notEmpty().withMessage("Political party selection is required"),
+  body("ethnicity").notEmpty().withMessage("Ethnicity is required"),
+  body("highestQualification").notEmpty().withMessage("Highest qualification is required"),
+  body("consentCategories")
+    .isArray({ min: 1 })
+    .withMessage("At least one consent category must be selected"),
+];
+module.exports = { registerValidation, emailValidation, otpValidation, resetPasswordValidation, userProfileSurveyValidation };

@@ -1,7 +1,7 @@
 const { validationResult } = require("express-validator");
 const authService = require("./service");
 const { sendResponse } = require("../../utils/response");
-const User = require("../User/model");
+const { User, UserProfileSurvey } = require("../User/model");
 const jwt = require("jsonwebtoken");
 const { accessTokenDuration } = require("../../utils/constants");
 
@@ -247,7 +247,39 @@ const updateProfile = async (req, res) => {
     });
   }
 };
-
+const userProfileSurvey = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty())
+    return sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: errors.array()[0].msg,
+    });
+  try {
+    const result = await authService.userProfileSurvey(req.user, req.body);
+    sendResponse(res, {
+      message: "Profile survey submitted",
+      data: result.data,
+    });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: error.message,
+    });
+  }
+};
+const me = async (req, res) => {
+  const userId = req.user;
+  const user = await User.findOne({ _id: userId }).lean();
+  const survey = await UserProfileSurvey.findOne({ userId }).lean();
+  const result = { ...user, survey: survey };
+  sendResponse(res, {
+    data: result,
+    statusCode: 200,
+    success: true,
+  });
+};
 module.exports = {
   register,
   adminRegister,
@@ -261,5 +293,7 @@ module.exports = {
   signIn,
   verifyOtpForPass,
   changePassword,
-  adminSignIn
+  adminSignIn,
+  userProfileSurvey,
+  me,
 };

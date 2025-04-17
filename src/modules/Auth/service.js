@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../User/model");
+const { User, UserProfileSurvey } = require("../User/model");
 const {
   generateOTP,
   generateAccessToken,
@@ -79,14 +79,14 @@ const adminSignIn = async (email, password, res, req) => {
     httpOnly: true,
     secure: true,
     sameSite: "none",
-    maxAge: accessTokenDuration
+    maxAge: accessTokenDuration,
   });
 
   res.cookie("adminRefreshToken", refreshToken, {
     httpOnly: true,
     secure: true,
     sameSite: "none",
-    maxAge: refreshTokenDuration
+    maxAge: refreshTokenDuration,
   });
   return {
     message: "Sign-in successful",
@@ -126,13 +126,13 @@ const verifyOtp = async (email, otp, res, req) => {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: accessTokenDuration
+      maxAge: accessTokenDuration,
     });
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: refreshTokenDuration
+      maxAge: refreshTokenDuration,
     });
   }
   return { message: "OTP verified successfully", data: { user, accessToken } };
@@ -165,13 +165,13 @@ const resetPassword = async (email, newPassword, otp, res, req) => {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: refreshTokenDuration
+      maxAge: refreshTokenDuration,
     });
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: accessTokenDuration
+      maxAge: accessTokenDuration,
     });
   }
   return {
@@ -203,6 +203,15 @@ const updateProfile = async (userId, updateData) => {
   if (!user) throw new Error("User not found");
   return { data: user };
 };
+const userProfileSurvey = async (userId, data) => {
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
+  const existedSurveyResponse = await UserProfileSurvey.findOne({ userId });
+  console.log(existedSurveyResponse);
+  if (existedSurveyResponse) throw new Error("User already submitted survey");
+  const response = await UserProfileSurvey.create({ ...data, userId });
+  return { data: response };
+};
 
 module.exports = {
   registerUser,
@@ -214,4 +223,5 @@ module.exports = {
   verifyOtpForPass,
   changePassword,
   adminSignIn,
+  userProfileSurvey,
 };

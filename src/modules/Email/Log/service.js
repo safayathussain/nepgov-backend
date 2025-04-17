@@ -1,7 +1,7 @@
 const postmark = require("postmark");
 const EmailLog = require("./model");
 const EmailTemplate = require("../Template/model");
-const User = require("../../User/model");
+const {User} = require("../../User/model");
 
 // Initialize Postmark client
 let client;
