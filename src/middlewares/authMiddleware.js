@@ -4,7 +4,6 @@ const { accessTokenDuration } = require("../utils/constants");
 
 const authMiddleware = async (req, res, next) => {
   try {
-    const cookieConsent = req.headers["x-user-consent"];
     const authHeader = req.headers["authorization"]?.split(" ")[1];
     const tokens = {
       user: {
@@ -16,31 +15,30 @@ const authMiddleware = async (req, res, next) => {
         refresh: req.cookies.adminRefreshToken
       }
     };
+
     // Check if any token exists
     if (!tokens.user.access && !tokens.user.refresh && 
         !tokens.admin.access && !tokens.admin.refresh) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // Handle refresh tokens if needed
-    if (cookieConsent === "accepted") {
-      // Process user refresh token
-      if (!tokens.user.access && tokens.user.refresh) {
-        tokens.user.access = await refreshAccessToken(
-          tokens.user.refresh,
-          res,
-          "accessToken"
-        );
-      }
-      
-      // Process admin refresh token
-      if (!tokens.admin.access && tokens.admin.refresh) {
-        tokens.admin.access = await refreshAccessToken(
-          tokens.admin.refresh,
-          res,
-          "adminAccessToken"
-        );
-      }
+    // Handle refresh tokens
+    // Process user refresh token
+    if (!tokens.user.access && tokens.user.refresh) {
+      tokens.user.access = await refreshAccessToken(
+        tokens.user.refresh,
+        res,
+        "accessToken"
+      );
+    }
+    
+    // Process admin refresh token
+    if (!tokens.admin.access && tokens.admin.refresh) {
+      tokens.admin.access = await refreshAccessToken(
+        tokens.admin.refresh,
+        res,
+        "adminAccessToken"
+      );
     }
 
     // Verify tokens and set user data
@@ -51,23 +49,20 @@ const authMiddleware = async (req, res, next) => {
         const decoded = jwt.verify(tokens.user.access, process.env.JWT_ACCESS_SECRET);
         req.user = decoded.id;
         req.role = decoded.role;
-        req.cookieConsent = cookieConsent;
         authenticated = true;
       } catch (error) {
         // Continue to admin token check
       }
     }
+    
     if (tokens.admin.access) {
       try {
         const decodedAdmin = jwt.verify(tokens.admin.access, process.env.JWT_ACCESS_SECRET);
         req.adminUser = decodedAdmin.id;
         req.adminRole = decodedAdmin.role;
-        req.adminCookieConsent = cookieConsent;
         authenticated = true;
       } catch (error) {
-        // Continue if user was already authenticated
         if (!authenticated) {
-          // Only throw if no other authentication succeeded
           throw new Error("Invalid Admin Access Token");
         }
       }
@@ -75,9 +70,8 @@ const authMiddleware = async (req, res, next) => {
     
     if (authenticated) {
       return next();
-    } else {
-      return res.status(401).json({ message: "Invalid Access Token" });
     }
+    return res.status(401).json({ message: "Invalid Access Token" });
   } catch (error) {
     return res.status(401).json({ message: error?.message || "Authentication Error" });
   }

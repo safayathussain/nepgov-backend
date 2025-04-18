@@ -6,7 +6,6 @@ const connectDB = require("./config/db");
 const router = require("./routes");
 const connectRedis = require("./config/redis");
 const path = require("path");
-const checkCookieConsent = require("./middlewares/checkCookieConsent");
 const { postMarkWebhook } = require("./modules/Email/webhook");
 dotenv.config();
 
@@ -68,7 +67,7 @@ const corsOptions = {
       }
     }
   },
-  allowedHeaders: ["Content-Type", "authorization", "X-Requested-With", "x-user-consent"],
+  allowedHeaders: ["Content-Type", "authorization", "X-Requested-With"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
 };
 
@@ -77,7 +76,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 
-app.use("/api/v1", checkCookieConsent, router);
+app.use("/api/v1", router);
 
 
 app.use("*", (req, res) => {

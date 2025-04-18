@@ -40,22 +40,21 @@ const signIn = async (email, password, res, req) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
   if (user.isVerified) {
-    if (req.cookieConsent === "accepted") {
-      // Set cookies for access & refresh tokens
-      res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: accessTokenDuration,
-      });
+    // Set cookies for access & refresh tokens
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: accessTokenDuration,
+    });
 
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: refreshTokenDuration,
-      });
-    }
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: refreshTokenDuration,
+    });
+   
   }
   return {
     message: "Sign-in successful",
@@ -121,20 +120,18 @@ const verifyOtp = async (email, otp, res, req) => {
   await user.save();
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
-  if (req.cookieConsent === "accepted") {
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: accessTokenDuration,
-    });
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: refreshTokenDuration,
-    });
-  }
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    maxAge: accessTokenDuration,
+  });
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    maxAge: refreshTokenDuration,
+  });
   return { message: "OTP verified successfully", data: { user, accessToken } };
 };
 const verifyOtpForPass = async (email, otp, res) => {
@@ -160,20 +157,18 @@ const resetPassword = async (email, newPassword, otp, res, req) => {
   await user.save();
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
-  if (req.cookieConsent === "accepted") {
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: refreshTokenDuration,
-    });
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: accessTokenDuration,
-    });
-  }
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    maxAge: refreshTokenDuration,
+  });
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    maxAge: accessTokenDuration,
+  });
   return {
     message: "Password reset successfully",
     data: { user, accessToken },
