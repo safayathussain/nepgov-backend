@@ -132,7 +132,7 @@ const verifyOtp = async (email, otp, res, req) => {
     sameSite: "none",
     maxAge: refreshTokenDuration,
   });
-  return { message: "OTP verified successfully", data: { user, accessToken } };
+  return { message: "OTP verified successfully", data: { ...user.toObject(), accessToken } };
 };
 const verifyOtpForPass = async (email, otp, res) => {
   const user = await User.findOne({ email });
