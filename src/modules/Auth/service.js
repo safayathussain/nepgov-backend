@@ -178,7 +178,12 @@ const resetPassword = async (email, newPassword, otp, res, req) => {
   });
   return {
     message: "Password reset successfully",
-    data: { user, accessToken },
+    data: {
+      user: {
+        ...user.toObject(),
+        accessToken,
+      },
+    },
   };
 };
 const changePassword = async (userId, oldPassword, newPassword) => {
