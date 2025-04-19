@@ -24,7 +24,10 @@ app.use("/uploads", (req, res, next) => {
 // CORS CONFIGURATIONS
 const whitelist = [
   "http://localhost:3000",
+  "http://127.0.0.1:3000",
   "http://localhost:3001",
+  "http://localhost:3004",
+  "http://localhost:3005",
   "https://account.postmarkapp.com",
   "https://postmarkapp.com",
   process.env.FRONTEND_URL,
@@ -36,9 +39,9 @@ const webhookCorsOptions = {
     if (process.env.NODE_ENV !== "production" || !origin) {
       return callback(null, true);
     }
-    // callback(null, true); // Optionally allow all for webhooks, or add specific checks
+    callback(null, true); // Optionally allow all for webhooks, or add specific checks
   },
-  methods: ["POST", "OPTIONS"], 
+  methods: ["POST", "OPTIONS"], // Postmark uses POST
   allowedHeaders: ["Content-Type"],
 };
 app.use(
@@ -55,7 +58,6 @@ app.use(
 const corsOptions = {
   credentials: true,
   origin: (origin, callback) => {
-    console.log(origin)
     if (process.env.NODE_ENV !== "production") {
       return callback(null, true);
     } else {
