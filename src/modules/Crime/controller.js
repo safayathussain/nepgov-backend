@@ -102,7 +102,35 @@ const markAllAsSeen = async (req, res) => {
     });
   }
 };
-
+const setCrimeTypes = async (req, res) => {
+  try {
+    await crimeService.setCrimeTypes(req.body);
+    sendResponse(res, {
+      message: "Crime types updated successfully",
+    });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: error.message,
+    });
+  }
+};
+const getAllCrimeTypes = async (req, res) => {
+  try {
+    const crimes = await crimeService.getAllCrimeTypes();
+    sendResponse(res, {
+      message: "Crime types retrieved successfully",
+      data: crimes,
+    });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: error.message,
+    });
+  }
+};
 module.exports = {
   createCrime,
   getAllCrimes,
@@ -110,4 +138,6 @@ module.exports = {
   deleteCrime,
   markCrimeAsSeen,
   markAllAsSeen,
+  setCrimeTypes,
+  getAllCrimeTypes
 };

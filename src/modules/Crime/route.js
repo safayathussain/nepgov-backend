@@ -8,14 +8,18 @@ const {
   deleteCrime,
   markCrimeAsSeen,
   markAllAsSeen,
+  getAllCrimeTypes,
+  setCrimeTypes,
 } = require("./controller");
 const { createCrimeValidation } = require("./validation");
 
 // Public routes
-router.post("/create", createCrimeValidation,   createCrime);
+router.post("/create", createCrimeValidation, createCrime);
+router.get("/types", getAllCrimeTypes);
 
 // Protected routes
 router.get("/", authMiddleware, roleMiddleware(["admin"]), getAllCrimes);
+router.post("/types/set", authMiddleware, roleMiddleware(["admin"]), setCrimeTypes);
 router.delete(
   "/delete/:id",
   authMiddleware,

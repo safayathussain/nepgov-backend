@@ -16,6 +16,10 @@ const userSchema = new mongoose.Schema(
     postCode: { type: String, required: true },
     role: { type: String, default: "user" },
     isVerified: { type: Boolean, default: false },
+    survey: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "UserProfileSurvey",
+    },
   },
   { timestamps: true }
 );

@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const CrimeSchema = new mongoose.Schema(
   {
     crimeType: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CrimeType",
       required: true,
     },
     location: {
@@ -42,13 +43,26 @@ const CrimeSchema = new mongoose.Schema(
       type: String,
       enum: ["yes", "no", "dontKnow"],
       required: true,
-    }, 
+    },
     isSeenByAdmin: {
       type: Boolean,
       default: false,
-    }, 
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Crime", CrimeSchema);
+const CrimeTypeSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
+
+module.exports = {
+  Crime: mongoose.model("Crime", CrimeSchema),
+  CrimeType: mongoose.model("CrimeType", CrimeTypeSchema),
+};

@@ -214,9 +214,9 @@ const userProfileSurvey = async (userId, data) => {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
   const existedSurveyResponse = await UserProfileSurvey.findOne({ userId });
-  console.log(existedSurveyResponse);
   if (existedSurveyResponse) throw new Error("User already submitted survey");
   const response = await UserProfileSurvey.create({ ...data, userId });
+  await User.findByIdAndUpdate(userId, { survey: response._id });
   return { data: response };
 };
 
