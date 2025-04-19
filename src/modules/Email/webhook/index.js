@@ -7,8 +7,6 @@ const postMarkWebhook = async (req, res) => {
 
     const emailLog = await EmailLog.findOne({ postmarkMessageId: MessageID });
     if (!emailLog) {
-   return res.status(200).json({ message: "Webhook processed successfully" });
-
       return res.status(404).json({ message: "Email log not found" });
     }
 
