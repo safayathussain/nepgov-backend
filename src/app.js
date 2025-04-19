@@ -35,6 +35,7 @@ const whitelist = [
 ];
 const webhookCorsOptions = {
   origin: (origin, callback) => {
+    console.log(origin)
     // Allow all in dev or if no origin (server-to-server)
     if (process.env.NODE_ENV !== "production" || !origin) {
       return callback(null, true);
@@ -49,6 +50,7 @@ app.use(
   cors(webhookCorsOptions),
   async (req, res) => {
     try {
+      console.log("webhook triggered")
       await postMarkWebhook(req, res);
     } catch (error) {
       console.error(error);
