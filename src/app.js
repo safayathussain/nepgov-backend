@@ -35,12 +35,10 @@ const whitelist = [
 ];
 const webhookCorsOptions = {
   origin: (origin, callback) => {
-    console.log(origin)
     // Allow all in dev or if no origin (server-to-server)
     if (process.env.NODE_ENV !== "production" || !origin) {
       return callback(null, true);
-    }
-    callback(null, true); // Optionally allow all for webhooks, or add specific checks
+    } 
   },
   methods: ["POST", "OPTIONS"], // Postmark uses POST
   allowedHeaders: ["Content-Type"],
@@ -50,7 +48,6 @@ app.use(
   cors(webhookCorsOptions),
   async (req, res) => {
     try {
-      console.log("webhook triggered")
       await postMarkWebhook(req, res);
     } catch (error) {
       console.error(error);
