@@ -9,7 +9,6 @@ const path = require("path");
 const { postMarkWebhook } = require("./modules/Email/webhook");
 dotenv.config();
 
-
 connectDB();
 // const redisClient = connectRedis()
 const app = express();
@@ -31,7 +30,7 @@ const whitelist = [
   "https://account.postmarkapp.com",
   "https://postmarkapp.com",
   process.env.FRONTEND_URL,
-  process.env.FRONTEND_URL_ADMIN
+  process.env.FRONTEND_URL_ADMIN,
 ];
 const webhookCorsOptions = {
   origin: (origin, callback) => {
@@ -39,21 +38,22 @@ const webhookCorsOptions = {
     if (process.env.NODE_ENV !== "production" || !origin) {
       return callback(null, true);
     }
-    callback(null, true); // Optionally allow all for webhooks, or add specific checks
+    // callback(null, true); // Optionally allow all for webhooks, or add specific checks
   },
-  methods: ["POST", "OPTIONS"], // Postmark uses POST
+  methods: ["POST", "OPTIONS"], 
   allowedHeaders: ["Content-Type"],
 };
-app.use("/api/v1/webhooks/postmark", cors(webhookCorsOptions), async(req, res) => {
-  console.log("Postmark webhook received:", req.body);
-  // res.status(200).send("Webhook processed");
-  try {
- await postMarkWebhook(req, res)
- 
- } catch (error) {
-  console.error(error)
- }
-});
+app.use(
+  "/api/v1/webhooks/postmark",
+  cors(webhookCorsOptions),
+  async (req, res) => {
+    try {
+      await postMarkWebhook(req, res);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+);
 const corsOptions = {
   credentials: true,
   origin: (origin, callback) => {
@@ -71,16 +71,13 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
 };
 
-
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
-
 app.use("/api/v1", router);
-
 
 app.use("*", (req, res) => {
   res.status(404).json({ status: "fail", data: "Route Not Found" });
 });
 
-module.exports = {app}
+module.exports = { app };
