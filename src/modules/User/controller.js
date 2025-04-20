@@ -17,6 +17,21 @@ const getAllUsers = async (req, res) => {
     });
   }
 };
+const deleteUser = async (req, res) => {
+  try {
+    const result = await userService.deleteUser(req.params.id);
+    sendResponse(res, {
+      message: "Users deleted successfully",
+      data: result,
+    });
+  } catch (error) {
+    sendResponse(res, {
+      statusCode: 400,
+      success: false,
+      message: error.message,
+    });
+  }
+};
 const getUserById = async (req, res) => {
   try {
     const result = await userService.getUserById(req.params.id);
@@ -33,4 +48,4 @@ const getUserById = async (req, res) => {
   }
 };
 
-module.exports = { getAllUsers, getUserById };
+module.exports = { getAllUsers, getUserById , deleteUser};
