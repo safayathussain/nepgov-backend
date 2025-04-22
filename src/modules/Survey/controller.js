@@ -49,7 +49,7 @@ const createSurvey = async (req, res) => {
 
 const getAllSurveys = async (req, res) => {
   try {
-    const surveys = await surveyService.getAllSurveys(req.query);
+    const surveys = await surveyService.getAllSurveys(req.query, req);
     sendResponse(res, {
       message: "Surveys retrieved successfully",
       data: surveys,

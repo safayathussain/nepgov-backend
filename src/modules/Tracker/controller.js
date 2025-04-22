@@ -33,7 +33,7 @@ const createTracker = async (req, res) => {
 
 const getAllTrackers = async (req, res) => {
   try {
-    const trackers = await trackerService.getAllTrackers(req.query);
+    const trackers = await trackerService.getAllTrackers(req.query, req);
     sendResponse(res, {
       message: "Trackers retrieved successfully",
       data: trackers,

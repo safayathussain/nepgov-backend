@@ -28,14 +28,22 @@ const createTracker = async (trackerData) => {
   return tracker.populate(["options", "categories"]);
 };
 
-const getAllTrackers = async (query = {}) => {
+const getAllTrackers = async (query = {}, req) => {
   const { category } = query;
   const filter = {};
 
   if (category) {
     filter.categories = category;
   }
+  // Check if request is from localhost:3001 or FRONTEND_URL_ADMIN
+  const isAdminRequest =
+    req.headers.origin === "http://localhost:3001" ||
+    req.headers.origin === process.env.FRONTEND_URL_ADMIN;
 
+  // If not an admin request, exclude scheduled trackers (liveStartedAt > currentDate)
+  if (!isAdminRequest) {
+    filter.liveStartedAt = { $lte: new Date() };
+  }
   const trackers = await Tracker.find(filter)
     .populate(["options", "categories"])
     .sort({ createdAt: -1 });
@@ -333,7 +341,7 @@ const trackerResult = async (trackerId, query) => {
 };
 
 const deleteTracker = async (id) => {
-const session = await mongoose.startSession();
+  const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
@@ -341,12 +349,12 @@ const session = await mongoose.startSession();
     if (!tracker) throw new Error("Tracker not found");
 
     // Delete all associated options for each question
-      await TrackerOption.deleteMany(
-        {
-          _id: { $in: tracker.options },
-        },
-        { session }
-      );
+    await TrackerOption.deleteMany(
+      {
+        _id: { $in: tracker.options },
+      },
+      { session }
+    );
 
     // Delete the survey itself
     await Tracker.findByIdAndDelete(id, { session });

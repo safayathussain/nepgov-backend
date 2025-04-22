@@ -48,10 +48,12 @@ const isLive = (start, end) => {
   const currentDate = new Date();
   const startDate = new Date(start);
   const endDate = new Date(end);
-
+  if (!end) {
+    return true;
+  }
   return currentDate >= startDate && currentDate <= endDate;
 };
- 
+
 module.exports = {
   generateToken,
   generateOTP,

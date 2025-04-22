@@ -10,8 +10,10 @@ const createSurveyValidation = [
   }),
   body("topic").notEmpty().withMessage("Topic is required"),
   body("liveEndedAt")
+    .optional({ nullable: true, checkFalsy: true })
+    .if(body("liveEndedAt").exists().notEmpty())
     .isISO8601()
-    .withMessage("Live ended at must be a valid date"),
+    .withMessage("Live end date must be a valid ISO8601 date"),
   body("liveStartedAt")
     .isISO8601()
     .withMessage("Live started at must be a valid date"),
@@ -34,15 +36,15 @@ const createSurveyValidation = [
   body("questions.*.options.*.color")
     .notEmpty()
     .withMessage("Option color is required"),
- 
 ];
 
 const updateSurveyValidation = [
   body("topic").optional().notEmpty().withMessage("Topic is required"),
   body("liveEndedAt")
-    .optional()
+    .optional({ nullable: true, checkFalsy: true })
+    .if(body("liveEndedAt").exists().notEmpty())
     .isISO8601()
-    .withMessage("Live ended at must be a valid date"),
+    .withMessage("Live end date must be a valid ISO8601 date"),
   body("liveStartedAt")
     .optional()
     .isISO8601()

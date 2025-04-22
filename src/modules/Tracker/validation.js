@@ -3,16 +3,17 @@ const { body } = require("express-validator");
 const createTrackerValidation = [
   body("topic").notEmpty().withMessage("Topic is required"),
   body("liveEndedAt")
-    .optional()
+    .optional({ nullable: true, checkFalsy: true })
+    .if(body("liveEndedAt").exists().notEmpty())
     .isISO8601()
-    .withMessage("Live ended at must be a valid date"),
+    .withMessage("Live end date must be a valid ISO8601 date"),
   body("liveStartedAt")
-    .optional()
+    .notEmpty()
     .isISO8601()
-    .withMessage("Live ended at must be a valid date"),
+    .withMessage("Live start date must be a valid ISO8601 date"),
   body("options")
     .isArray({ min: 2 })
-    .withMessage("At least 2 options required"),
+    .withMessage("At least 2 options are required"),
   body("options.*.content")
     .notEmpty()
     .withMessage("Option content is required"),
@@ -26,9 +27,14 @@ const createTrackerValidation = [
 const updateTrackerValidation = [
   body("topic").optional().notEmpty().withMessage("Topic cannot be empty"),
   body("liveEndedAt")
+    .optional({ nullable: true, checkFalsy: true })
+    .if(body("liveEndedAt").exists().notEmpty())
+    .isISO8601()
+    .withMessage("Live end date must be a valid ISO8601 date"),
+  body("liveStartedAt")
     .optional()
     .isISO8601()
-    .withMessage("Live ended at must be a valid date"),
+    .withMessage("Live started at must be a valid date"),
   body("categories")
     .optional()
     .isArray()

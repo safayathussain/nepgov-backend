@@ -60,13 +60,12 @@ const updateSurvey = async (surveyId, updateData) => {
   const deletedQuestions = JSON.parse(updateData.deletedQuestions);
   // Find the survey by ID
   const survey = await Survey.findById(surveyId);
-  if (!survey) throw new Error("Survey not found");
-
+  if (!survey) throw new Error("Survey not found"); 
   // Update survey metadata
   if (topic) survey.topic = topic;
   if (categories) survey.categories = categories;
   if (thumbnail) survey.thumbnail = thumbnail;
-  if (liveEndedAt) survey.liveEndedAt = liveEndedAt;
+  if (liveEndedAt || liveEndedAt === "") survey.liveEndedAt = liveEndedAt;
   if (liveStartedAt) survey.liveStartedAt = liveStartedAt;
   // for creating new questions
   if (questions && questions.length > 0) {
@@ -193,14 +192,22 @@ const updateSurvey = async (surveyId, updateData) => {
     })
     .populate("categories");
 };
-const getAllSurveys = async (query = {}) => {
+const getAllSurveys = async (query = {}, req) => {
   const { category } = query;
   const filter = {};
 
   if (category) {
     filter.categories = category;
   }
+  // Check if request is from localhost:3001 or FRONTEND_URL_ADMIN
+  const isAdminRequest =
+    req.headers.origin === "http://localhost:3001" ||
+    req.headers.origin === process.env.FRONTEND_URL_ADMIN;
 
+  // If not an admin request, exclude scheduled surveys (liveStartedAt > currentDate)
+  if (!isAdminRequest) {
+    filter.liveStartedAt = { $lte: new Date() };
+  }
   return await Survey.find(filter)
     .populate({
       path: "questions.options",
@@ -209,7 +216,6 @@ const getAllSurveys = async (query = {}) => {
     .populate(["categories"])
     .sort({ createdAt: -1 });
 };
-
 const getSurveyById = async (id) => {
   const survey = await Survey.findById(id)
     .populate({

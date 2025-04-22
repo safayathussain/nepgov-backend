@@ -28,8 +28,7 @@ const surveySchema = new mongoose.Schema(
       required: true,
     },
     liveEndedAt: {
-      type: Date,
-      required: true,
+      type: Date, 
     },
     categories: [
       {
