@@ -1,6 +1,8 @@
 const router = require("express").Router();
 const authMiddleware = require("../../middlewares/authMiddleware");
+const { setFolderName } = require("../../middlewares/middlewares");
 const roleMiddleware = require("../../middlewares/roleMiddleware");
+const { folders } = require("../../utils/constants");
 const upload = require("../../utils/upload");
 const {
   createArticle,
@@ -18,6 +20,7 @@ router.post(
   "/create",
   authMiddleware,
   roleMiddleware(["admin"]),
+  setFolderName(folders.articles),
   upload.single("thumbnail"),
   createArticleValidation,
   createArticle
@@ -27,6 +30,7 @@ router.put(
   "/update/:id",
   authMiddleware,
   roleMiddleware(["admin"]),
+  setFolderName(folders.articles),
   upload.single("thumbnail"),
   updateArticleValidation,
   updateArticle

@@ -15,12 +15,10 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", (req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*"); // Allow image access from all origins (adjust for production)
-  next();
-});
-// app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
-
+// app.use("/uploads", (req, res, next) => {
+//   res.setHeader("Access-Control-Allow-Origin", "*");  
+//   next();
+// });
 // CORS CONFIGURATIONS
 const whitelist = [
   "http://localhost:3000",

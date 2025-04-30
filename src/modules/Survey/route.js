@@ -1,6 +1,8 @@
 const router = require("express").Router();
 const authMiddleware = require("../../middlewares/authMiddleware");
+const { setFolderName } = require("../../middlewares/middlewares");
 const roleMiddleware = require("../../middlewares/roleMiddleware");
+const { folders } = require("../../utils/constants");
 const upload = require("../../utils/upload");
 const {
   createSurvey,
@@ -17,7 +19,7 @@ const {
   updateQuestion,
   updateQuestionOption,
   checkVote,
-  getQuestionResults
+  getQuestionResults,
 } = require("./controller");
 
 const {
@@ -27,7 +29,7 @@ const {
   addQuestionValidation,
   addQuestionOptionValidation,
   updateQuestionValidation,
-  updateQuestionOptionValidation
+  updateQuestionOptionValidation,
 } = require("./validation");
 
 // Survey CRUD operations
@@ -35,7 +37,8 @@ router.post(
   "/create",
   authMiddleware,
   roleMiddleware(["admin"]),
-  upload.single("thumbnail"), 
+  setFolderName(folders.surveys),
+  upload.single("thumbnail"),
   createSurveyValidation,
   createSurvey
 );
@@ -51,24 +54,15 @@ router.put(
   authMiddleware,
   roleMiddleware(["admin"]),
   updateSurveyValidation,
+  setFolderName(folders.surveys),
   upload.single("thumbnail"),
   updateSurvey
 );
 
-router.delete(
-  "/:id",
-  authMiddleware,
-  roleMiddleware(["admin"]),
-  deleteSurvey
-);
+router.delete("/:id", authMiddleware, roleMiddleware(["admin"]), deleteSurvey);
 
 // Voting
-router.post(
-  "/:id/vote",
-  authMiddleware,
-  voteValidation,
-  voteSurvey
-);
+router.post("/:id/vote", authMiddleware, voteValidation, voteSurvey);
 
 // Question Management
 router.post(

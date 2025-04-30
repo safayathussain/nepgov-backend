@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 const articleService = require("./service");
 const { sendResponse } = require("../../utils/response");
+const { deleteFile } = require("../../utils/deleteFile");
 
 const createArticle = async (req, res) => {
   try {
@@ -8,7 +9,7 @@ const createArticle = async (req, res) => {
     if (!errors.isEmpty()) {
       if (req.file) {
         try {
-          await fs.unlink(req.file.path);
+          await deleteFile(req.file.key);
         } catch (err) {
           console.error("Error deleting file:", err);
         }
@@ -18,11 +19,10 @@ const createArticle = async (req, res) => {
         success: false,
         message: errors.array()[0].msg,
       });
-    }
-
+    } 
     const articleData = {
       ...req.body,
-      thumbnail: req.file ? `${req.file.filename}` : null,
+      thumbnail: req.file ? `${req.file.key}` : null,
       user: req.user, // From auth middleware
     };
     if (!articleData.thumbnail) {
@@ -36,7 +36,7 @@ const createArticle = async (req, res) => {
   } catch (error) {
     if (req.file) {
       try {
-        await fs.unlink(req.file.path);
+        await deleteFile(req.file.key);
       } catch (err) {
         console.error("Error deleting file:", err);
       }
@@ -87,7 +87,7 @@ const updateArticle = async (req, res) => {
     if (!errors.isEmpty()) {
       if (req.file) {
         try {
-          await fs.unlink(req.file.path);
+          await deleteFile(req.file.key);
         } catch (err) {
           console.error("Error deleting file:", err);
         }
@@ -98,7 +98,7 @@ const updateArticle = async (req, res) => {
         message: errors.array()[0].msg,
       });
     }
-
+ 
     const result = await articleService.updateArticle(
       req.params.id,
       req.adminUser,
@@ -112,7 +112,7 @@ const updateArticle = async (req, res) => {
   } catch (error) {
     if (req.file) {
       try {
-        await fs.unlink(req.file.path);
+        await deleteFile(req.file.key);
       } catch (err) {
         console.error("Error deleting file:", err);
       }

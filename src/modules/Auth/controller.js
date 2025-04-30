@@ -4,6 +4,7 @@ const { sendResponse } = require("../../utils/response");
 const { User, UserProfileSurvey } = require("../User/model");
 const jwt = require("jsonwebtoken");
 const { accessTokenDuration } = require("../../utils/constants");
+const { deleteFile } = require("../../utils/deleteFile");
 
 const register = async (req, res) => {
   try {
@@ -235,11 +236,14 @@ const updateProfile = async (req, res) => {
       throw new Error("You are not allowed to update this profile");
     }
     if (req.file) {
-      req.body.profilePicture = req.file.filename;
+      req.body.profilePicture = req.file.key;
     }
     const result = await authService.updateProfile(req.user, req.body);
     sendResponse(res, { message: "Profile updated", data: result.data });
   } catch (error) {
+    if(req.file){
+      await deleteFile(req.file.key)
+    }
     sendResponse(res, {
       statusCode: 400,
       success: false,

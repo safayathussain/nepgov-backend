@@ -2,6 +2,7 @@ const { isLive, calculateAge } = require("../../utils/function");
 const { Survey, SurveyVote, SurveyQuestionOption } = require("./model");
 const mongoose = require("mongoose");
 const Category = require("../Category/model");
+const { deleteFile } = require("../../utils/deleteFile");
 
 const createSurvey = async (surveyData) => {
   try {
@@ -60,11 +61,14 @@ const updateSurvey = async (surveyId, updateData) => {
   const deletedQuestions = JSON.parse(updateData.deletedQuestions);
   // Find the survey by ID
   const survey = await Survey.findById(surveyId);
-  if (!survey) throw new Error("Survey not found"); 
+  if (!survey) throw new Error("Survey not found");
   // Update survey metadata
   if (topic) survey.topic = topic;
   if (categories) survey.categories = categories;
-  if (thumbnail) survey.thumbnail = thumbnail;
+  if (thumbnail) {
+    await deleteFile(survey.thumbnail);
+    survey.thumbnail = thumbnail;
+  }
   if (liveEndedAt || liveEndedAt === "") survey.liveEndedAt = liveEndedAt;
   if (liveStartedAt) survey.liveStartedAt = liveStartedAt;
   // for creating new questions
@@ -243,7 +247,7 @@ const deleteSurvey = async (surveyId) => {
         { session }
       );
     }
-
+    await deleteFile(survey.thumbnail);
     // Delete the survey itself
     await Survey.findByIdAndDelete(surveyId, { session });
     await Category.updateMany(

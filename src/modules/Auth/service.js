@@ -203,12 +203,16 @@ const changePassword = async (userId, oldPassword, newPassword) => {
 };
 
 const updateProfile = async (userId, updateData) => {
-  const user = await User.findByIdAndUpdate(userId, updateData, {
+  const user = await User.findById(userId)
+  if(!user){
+    throw new Error("User not found")
+  } 
+  const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
     new: true,
     runValidators: true,
   });
   if (!user) throw new Error("User not found");
-  return { data: user };
+  return { data: updatedUser };
 };
 const userProfileSurvey = async (userId, data) => {
   const user = await User.findById(userId);

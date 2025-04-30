@@ -19,6 +19,8 @@ const {
 const { registerValidation, userProfileSurveyValidation } = require("./validation");
 const authMiddleware = require("../../middlewares/authMiddleware");
 const upload = require("../../utils/upload");
+const { setFolderName } = require("../../middlewares/middlewares");
+const { folders } = require("../../utils/constants");
 
 const router = express.Router();
 
@@ -39,6 +41,7 @@ router.post("/me", authMiddleware, me);
 router.put(
   "/update-profile/:id",
   authMiddleware,
+  setFolderName(folders.profilePictures),
   upload.single("profilePicture"),
   updateProfile
 );
